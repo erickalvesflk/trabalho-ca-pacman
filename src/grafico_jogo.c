@@ -1,11 +1,12 @@
 #include "grafico_jogo.h"
 
+// Cores do jogo
 const Color mapaFundo = { 0, 0, 0, 255 };  
-
+const Color corFundo = { 3, 15, 79, 255 };
+const Color corBordas = { 6, 35, 212, 255 };
 
 void desenhar_parede(int i,int j,int x, int y)
 {
-    const Color corBordas = { 6, 35, 212, 255 };
     if (j == 0)
     {
         Vector2 inicio_borda = {x, y}, fim_borda = {x, y + tamanho_bloco};   
@@ -71,6 +72,7 @@ void desenhar_pacman(struct entidade ent)
     DrawCircle(ent.pos.x,ent.pos.y,t,ent.cor);
 }
 
+// Variáveis para a animação dos pontos
 float multi_alpha = 1.0;
 int sentido_alpha = -1;
 Vector2 pos_spawn_fantasmas = {0,0},  pos_spawn_jogador = {0,0};
@@ -150,13 +152,38 @@ void desenhar_mapa() // Desenha o mapa com entidades
 
 void desenhar_display()
 {
-    DrawRectangle(distancia_mapa/2,(altura_tela-tamanho_mapa/2)/2,tamanho_mapa/2,tamanho_mapa/2,mapaFundo);
+    int display_x = distancia_mapa/2, display_y = 60;
+    DrawRectangle(display_x,display_y,tamanho_display,tamanho_display-10,mapaFundo);
+    
+    Vector2 i,f;
+    i.x = display_x; i.y = display_y; 
+    f.x = display_x+tamanho_display; f.y = display_y; 
+    DrawLineEx(i,f,5,corBordas);
+    i.x = display_x; i.y = display_y+tamanho_display-10; 
+    f.x = display_x+tamanho_display; f.y = display_y+tamanho_display-10; 
+    DrawLineEx(i,f,5,corBordas);
+    i.x = display_x; i.y = display_y; 
+    f.x = display_x; f.y = display_y+tamanho_display-10; 
+    DrawLineEx(i,f,5,corBordas);
+    i.x = display_x+tamanho_display; i.y = display_y; 
+    f.x = display_x+tamanho_display; f.y = display_y+tamanho_display-10; 
+    DrawLineEx(i,f,5,corBordas);
+
+    DrawText("Info Jogador ",display_x+10,display_y+15,15,corBordas);
+    DrawText("Pontos restantes: ",display_x+10,display_y+40,15,WHITE);
+    DrawText("Vidas: ",display_x+10,display_y+70,15,WHITE);
+    
+    i.x = display_x+10; i.y = display_y+105; 
+    f.x = display_x+tamanho_display-10; f.y = display_y+105; 
+    DrawLineEx(i,f,5,corBordas);
+
+    DrawText("Info Mapa ",display_x+10,display_y+120,15,corBordas);
+    DrawText("Nome do Mapa: ",display_x+10,display_y+145,15,WHITE);
+    DrawText("Total de Pontos: ",display_x+10,display_y+175,15,WHITE);
 }
 
 void iniciar_grafico()
 {
-    const Color corFundo = { 3, 15, 79, 255 };
-
 
     InitWindow(largura_tela, altura_tela, "PacMan - Trabalho Contrução de Algoritimos");
     SetTargetFPS(FPS);
@@ -172,9 +199,11 @@ void iniciar_grafico()
         BeginDrawing();
             ClearBackground(corFundo);
             DrawText("Pacman",20,10,40,WHITE);
-            DrawText("Construção de Algoritimos",20,40+10,15,WHITE);
-            
+            DrawText("Construção de Algoritimos",20+MeasureText("Pacman",40)+10,30,15,WHITE);
+            DrawText("Erick Alves e Kauã Soares",20,altura_tela-30,15,WHITE);
+
             if(!mapa_escolhido){return;}
+
             desenhar_mapa();
             desenhar_display();
         EndDrawing();

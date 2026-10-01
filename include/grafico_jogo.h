@@ -10,6 +10,7 @@
 #define espessura_parede 5
 #define tamanho_mapa 450
 #define tamanho_bloco (tamanho_mapa/tamanho_grid)
+#define tamanho_display tamanho_mapa/2
 
 
 void iniciar_grafico(void); // Roda o gráfico do jogo
