@@ -14,6 +14,7 @@
                 "${workspaceFolder}/src/main.c",
                 "${workspaceFolder}/src/grafico_jogo.c",
                 "${workspaceFolder}/src/geranciador_de_mapa.c",
+                "${workspaceFolder}/src/entidades.c",
 
                 "-LC:/raylib/raylib/src",
                 "-lraylib",

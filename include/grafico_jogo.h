@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "entidades.h"
 #include "geranciador_de_mapa.h"
 
 #define largura_tela 750
@@ -9,5 +10,6 @@
 #define espessura_parede 5
 #define tamanho_mapa 450
 #define tamanho_bloco (tamanho_mapa/tamanho_grid)
+
 
 void iniciar_grafico(void); // Roda o gráfico do jogo

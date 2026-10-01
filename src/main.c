@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "raylib.h"
 #include "geranciador_de_mapa.h"
+#include "entidades.h"
 #include "grafico_jogo.h"
 
 int main()
@@ -12,6 +13,7 @@ int main()
     fechar_data_mapas();
     printf("Quantidade total de pontos: %d",mapa_info.total_pontos);
 
+    gerar_entidades();
     iniciar_grafico();
 
     return 0;

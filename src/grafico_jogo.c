@@ -1,5 +1,8 @@
 #include "grafico_jogo.h"
-#include <stdio.h>
+
+const Color mapaFundo = { 0, 0, 0, 255 };  
+
+
 void desenhar_parede(int i,int j,int x, int y)
 {
     const Color corBordas = { 6, 35, 212, 255 };
@@ -54,16 +57,110 @@ void desenhar_parede(int i,int j,int x, int y)
     }
 }
 
+void desenhar_fantasma(struct entidade ent)
+{
+    if(ent.tipo != entidade_fantasma){return;} // Segurança
+    int t = (int)(tamanho_bloco/1.5);
+    DrawRectangle(ent.pos.x-t/2,ent.pos.y-t/2,t,t, ent.cor);
+}
+
+void desenhar_pacman(struct entidade ent)
+{
+    if(ent.tipo != entidade_pacman){return;} // Segurança
+    int t = (int)(tamanho_bloco/2.5);
+    DrawCircle(ent.pos.x,ent.pos.y,t,ent.cor);
+}
+
+float multi_alpha = 1.0;
+int sentido_alpha = -1;
+Vector2 pos_spawn_fantasmas = {0,0},  pos_spawn_jogador = {0,0};
+
+void desenhar_mapa() // Desenha o mapa com entidades
+{
+    int x_mapa = (largura_tela-tamanho_mapa)-distancia_mapa, y_mapa = (altura_tela-tamanho_mapa)/2;
+    DrawRectangle(x_mapa,y_mapa,tamanho_mapa,tamanho_mapa,mapaFundo);
+
+    int eixo_x = x_mapa, eixo_y = y_mapa;
+    for (int i = 0; i < tamanho_grid; ++i) 
+    {
+        for (int j = 0; j < tamanho_grid; ++j)
+        {
+            switch (mapa_info.mapa[i][j].tipo)
+            {
+            case bloco_parede:
+                desenhar_parede(i,j,eixo_x,eixo_y);
+                break;
+            case bloco_area_com_pontos:
+                const Color cor_ponto = {255,255,255,(int)(255*multi_alpha)};
+                DrawCircle(eixo_x+tamanho_bloco/2,eixo_y+tamanho_bloco/2,tamanho_bloco/10,cor_ponto);
+                break;
+            case bloco_s_jogador:
+                int xj = eixo_x+tamanho_bloco/2, yj = eixo_y+tamanho_bloco/2;
+
+                if(pos_spawn_jogador.x == 0)
+                {
+                    pos_spawn_jogador.x = xj;
+                    pos_spawn_jogador.y = yj;
+                }
+
+                DrawCircle(xj+tamanho_bloco/2,yj+tamanho_bloco/2,tamanho_bloco/10,BLUE);
+                break;
+            case bloco_s_fantasmas:
+                int xf = eixo_x+tamanho_bloco/2, yf = eixo_y+tamanho_bloco/2; 
+
+                if(pos_spawn_fantasmas.x == 0)
+                {
+                    pos_spawn_fantasmas.x = xf;
+                    pos_spawn_fantasmas.y = yf;
+                }
+
+                DrawCircle(xf+tamanho_bloco/2,yf+tamanho_bloco/2,tamanho_bloco/10,RED);
+                break;
+            default:
+                break;
+            }
+            eixo_x += tamanho_bloco;
+        }
+        eixo_y += tamanho_bloco;
+        eixo_x = x_mapa;
+
+        //Desenhando entidades
+        for(int i = 0; i < quantidade_entidades; ++i)
+        {
+            struct entidade ent = entidades_para_render[i];
+            
+            switch (ent.tipo)
+            {
+            case entidade_fantasma:
+                ent.pos.x = ent.pos.x == 0 ? pos_spawn_fantasmas.x : ent.pos.x;
+                ent.pos.y = ent.pos.y == 0 ? pos_spawn_fantasmas.y : ent.pos.y;
+            
+            desenhar_fantasma(ent);
+            break;
+            case entidade_pacman:
+                ent.pos.x = ent.pos.x == 0 ? pos_spawn_jogador.x : ent.pos.x;
+                ent.pos.y = ent.pos.y == 0 ? pos_spawn_jogador.y : ent.pos.y;
+
+                desenhar_pacman(ent);
+                break;
+            }
+        }
+    }
+}
+
+void desenhar_display()
+{
+    DrawRectangle(distancia_mapa/2,(altura_tela-tamanho_mapa/2)/2,tamanho_mapa/2,tamanho_mapa/2,mapaFundo);
+}
+
 void iniciar_grafico()
 {
     const Color corFundo = { 3, 15, 79, 255 };
-    const Color mapaFundo = { 0, 0, 0, 255 };  
+
 
     InitWindow(largura_tela, altura_tela, "PacMan - Trabalho Contrução de Algoritimos");
     SetTargetFPS(FPS);
 
-    float multi_alpha = 1.0;
-    int sentido_alpha = -1;
     while (!WindowShouldClose())
     {
         // Animação dos pontos no mapa.
@@ -75,42 +172,11 @@ void iniciar_grafico()
         BeginDrawing();
             ClearBackground(corFundo);
             DrawText("Pacman",20,10,40,WHITE);
-            DrawText("Construção de Algoritimos - Erick Alves e Kauã Soares",20,altura_tela-30,15,WHITE);
-            int x_mapa = (largura_tela-tamanho_mapa)-distancia_mapa, y_mapa = (altura_tela-tamanho_mapa)/2;
-            DrawRectangle(x_mapa,y_mapa,tamanho_mapa,tamanho_mapa,mapaFundo);
-
+            DrawText("Construção de Algoritimos",20,40+10,15,WHITE);
             
-            if(mapa_escolhido)
-            {
-                int eixo_x = x_mapa, eixo_y = y_mapa;
-                for (int i = 0; i < tamanho_grid; ++i)
-                {
-                    for (int j = 0; j < tamanho_grid; ++j)
-                    {
-                        switch (mapa_info.mapa[i][j].tipo)
-                        {
-                        case bloco_parede:
-                            desenhar_parede(i,j,eixo_x,eixo_y);
-                            break;
-                        case bloco_area_com_pontos:
-                            const Color cor_ponto = {255,255,255,(int)(255*multi_alpha)};
-                            DrawCircle(eixo_x+tamanho_bloco/2,eixo_y+tamanho_bloco/2,tamanho_bloco/10,cor_ponto);
-                            break;
-                        case bloco_s_jogador:
-                            DrawCircle(eixo_x+tamanho_bloco/2,eixo_y+tamanho_bloco/2,tamanho_bloco/10,corFundo);
-                            break;
-                        case bloco_s_fantasmas:
-                            DrawCircle(eixo_x+tamanho_bloco/2,eixo_y+tamanho_bloco/2,tamanho_bloco/10,RED);
-                            break;
-                        default:
-                            break;
-                        }
-                        eixo_x += tamanho_bloco;
-                    }
-                    eixo_y += tamanho_bloco;
-                    eixo_x = x_mapa;
-                }
-            }
+            if(!mapa_escolhido){return;}
+            desenhar_mapa();
+            desenhar_display();
         EndDrawing();
     }
     CloseWindow();
