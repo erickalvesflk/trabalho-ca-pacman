@@ -11,28 +11,6 @@ escolha do mapa, etc...
 
 // Definidos por (y,x)
 
-enum tipo_bloco
-{
-    area_vazia,
-    bloco_area_com_pontos,
-    bloco_parede,
-    bloco_s_jogador,
-    bloco_s_fantasmas
-};
-
-struct bloco
-{
-    enum tipo_bloco tipo;
-};
-
-struct Mapa
-{
-    struct bloco mapa[tamanho_grid][tamanho_grid];
-    int spawn_jogador[2];
-    int spawn_fantasmas[2];
-    int total_pontos;
-};
-
 FILE *arquivo_ptr = NULL;
 int mapa_escolhido = 0;
 struct Mapa mapa_info;

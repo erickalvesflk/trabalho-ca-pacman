@@ -1,5 +1,5 @@
 #include "grafico_jogo.h"
-
+#include <stdio.h>
 void desenhar_parede(int i,int j,int x, int y)
 {
     const Color corBordas = { 6, 35, 212, 255 };
@@ -62,15 +62,24 @@ void iniciar_grafico()
     InitWindow(largura_tela, altura_tela, "PacMan - Trabalho Contrução de Algoritimos");
     SetTargetFPS(FPS);
 
+    float multi_alpha = 1.0;
+    int sentido_alpha = -1;
     while (!WindowShouldClose())
     {
+        // Animação dos pontos no mapa.
+        multi_alpha += (1.0/(FPS*1)) * sentido_alpha;
+
+        if(multi_alpha < 0.375f){multi_alpha = 0.375f; sentido_alpha=1;}
+        if(multi_alpha > 1.0f){multi_alpha = 1.0f; sentido_alpha=-1;}
+
         BeginDrawing();
             ClearBackground(corFundo);
             DrawText("Pacman",20,10,40,WHITE);
             DrawText("Construção de Algoritimos - Erick Alves e Kauã Soares",20,altura_tela-30,15,WHITE);
-            int x_mapa = (largura_tela-tamanho_mapa)-20, y_mapa = (altura_tela-tamanho_mapa)/2;
+            int x_mapa = (largura_tela-tamanho_mapa)-distancia_mapa, y_mapa = (altura_tela-tamanho_mapa)/2;
             DrawRectangle(x_mapa,y_mapa,tamanho_mapa,tamanho_mapa,mapaFundo);
 
+            
             if(mapa_escolhido)
             {
                 int eixo_x = x_mapa, eixo_y = y_mapa;
@@ -84,7 +93,8 @@ void iniciar_grafico()
                             desenhar_parede(i,j,eixo_x,eixo_y);
                             break;
                         case bloco_area_com_pontos:
-                            DrawCircle(eixo_x+tamanho_bloco/2,eixo_y+tamanho_bloco/2,tamanho_bloco/10,WHITE);
+                            const Color cor_ponto = {255,255,255,(int)(255*multi_alpha)};
+                            DrawCircle(eixo_x+tamanho_bloco/2,eixo_y+tamanho_bloco/2,tamanho_bloco/10,cor_ponto);
                             break;
                         case bloco_s_jogador:
                             DrawCircle(eixo_x+tamanho_bloco/2,eixo_y+tamanho_bloco/2,tamanho_bloco/10,corFundo);
