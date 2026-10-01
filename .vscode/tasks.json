@@ -7,9 +7,21 @@
             "command": "C:\\msys64\\ucrt64\\bin\\gcc.exe",
             "args": [
                 "-g",
+
                 "-I${workspaceFolder}/include",
+                "-IC:/raylib/raylib/src",
+
                 "${workspaceFolder}/src/main.c",
+                "${workspaceFolder}/src/grafico_jogo.c",
                 "${workspaceFolder}/src/geranciador_de_mapa.c",
+
+                "-LC:/raylib/raylib/src",
+                "-lraylib",
+
+                "-lopengl32",
+                "-lgdi32",
+                "-lwinmm",
+
                 "-o",
                 "${workspaceFolder}/build/pacman.exe"
             ],

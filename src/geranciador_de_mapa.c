@@ -7,25 +7,41 @@ escolha do mapa, etc...
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-#define caminho "mapas.txt"
-#define L 14
+#include "geranciador_de_mapa.h"
 
 // Definidos por (y,x)
+
+enum tipo_bloco
+{
+    area_vazia,
+    bloco_area_com_pontos,
+    bloco_parede,
+    bloco_s_jogador,
+    bloco_s_fantasmas
+};
+
+struct bloco
+{
+    enum tipo_bloco tipo;
+};
+
 struct Mapa
 {
-    char mapa[L][L];
+    struct bloco mapa[tamanho_grid][tamanho_grid];
     int spawn_jogador[2];
     int spawn_fantasmas[2];
+    int total_pontos;
 };
 
 FILE *arquivo_ptr = NULL;
-struct Mapa mapa_obj;
+int mapa_escolhido = 0;
+struct Mapa mapa_info;
 
 int iniciar_data_mapas()
 {
     arquivo_ptr = fopen(caminho,"r");
     if(arquivo_ptr == NULL){return 0;}
+    mapa_info.total_pontos = 0;
 
     return 1;
 }
@@ -36,7 +52,7 @@ int quantidade_de_mapas()
     int quantidade = 0;
     fseek(arquivo_ptr, 0, SEEK_SET); // Move o ponteiro para o inicio
 
-    char linha[L];
+    char linha[tamanho_grid];
     while (fgets(linha,sizeof(linha),arquivo_ptr) != NULL)
     {
         if(linha[0] == 'M')
@@ -49,6 +65,7 @@ int quantidade_de_mapas()
     return quantidade;
 }
 
+// Escolhe um mapa de forma aleatória e define `mapa_info`
 int escolher_mapa()
 {
     if(arquivo_ptr == NULL){ perror("[Gerenciador de Mapas(quantidade)] - Mapas nao foram incializados!"); return 0;}
@@ -57,7 +74,7 @@ int escolher_mapa()
 
     srand(time(NULL)); // Define uma seed de geração de acordo com o horario (Para aumentar a randomização)
     int escolhido = rand() % quant + 1; 
-
+    printf("%d",escolhido);
     fseek(arquivo_ptr, 0, SEEK_SET); // Retorna o ponteiro ao inicio do arquivo
 
     char c = fgetc(arquivo_ptr);
@@ -69,24 +86,41 @@ int escolher_mapa()
         {
             ++m;
         }
-        if(m == escolhido && (c == '.' || c == '#' || c == 'j' || c == 'f'))
+        
+        if(m == escolhido && (c == '.' || c == '#' || c == 'j' || c == 'f' || c == '-'))
         {
-            mapa_obj.mapa[i][j] = c;
-            if(c == 'j') // Salva o spawn do jogador e do fantasma
+            struct bloco b;
+            switch (c)
             {
-                mapa_obj.spawn_jogador[0] = i;
-                mapa_obj.spawn_jogador[1] = j;
+            case '.':
+                b.tipo = bloco_area_com_pontos;
+                ++mapa_info.total_pontos;
+                break;
+            case '#':
+                b.tipo = bloco_parede;
+                break;
+            case 'j':
+                b.tipo = bloco_s_jogador;
+                mapa_info.spawn_jogador[0] = i;
+                mapa_info.spawn_jogador[1] = j;
+                break;
+            case 'f':
+                b.tipo = bloco_s_fantasmas;
+                mapa_info.spawn_fantasmas[0] = i;
+                mapa_info.spawn_fantasmas[1] = j;
+                break;
+            case '-':
+                b.tipo = area_vazia;
+                break;
             }
-            else if (c == 'f')
-            {
-                mapa_obj.spawn_fantasmas[0] = i;
-                mapa_obj.spawn_fantasmas[1] = j;
-            }
+            mapa_info.mapa[i][j] = b;
+  
             ++j;
-            if(j == L){j = 0; ++i;}
+            if(j == tamanho_grid){j = 0; ++i;}
         }
         c = fgetc(arquivo_ptr);
-    }    
+    }
+    mapa_escolhido = 1;
     return 1;
 }
 
