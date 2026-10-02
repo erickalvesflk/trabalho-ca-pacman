@@ -52,7 +52,7 @@ int escolher_mapa()
 
     srand(time(NULL)); // Define uma seed de geração de acordo com o horario (Para aumentar a randomização)
     int escolhido = rand() % quant + 1; 
-    printf("%d",escolhido);
+    mapa_info.indice_escolhido = escolhido;
     fseek(arquivo_ptr, 0, SEEK_SET); // Retorna o ponteiro ao inicio do arquivo
 
     char c = fgetc(arquivo_ptr);

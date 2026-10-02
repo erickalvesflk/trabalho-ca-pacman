@@ -2,8 +2,10 @@
 
 // Cores do jogo
 const Color mapaFundo = { 0, 0, 0, 255 };  
-const Color corFundo = { 3, 15, 79, 255 };
+const Color corFundo1 = { 3, 15, 79, 255 };
+const Color corFundo2 = { 2, 24, 184, 255 };
 const Color corBordas = { 6, 35, 212, 255 };
+const Color corDisplay = {12, 40, 250, 255};
 
 void desenhar_parede(int i,int j,int x, int y)
 {
@@ -152,34 +154,50 @@ void desenhar_mapa() // Desenha o mapa com entidades
 
 void desenhar_display()
 {
-    int display_x = distancia_mapa/2, display_y = 60;
-    DrawRectangle(display_x,display_y,tamanho_display,tamanho_display-10,mapaFundo);
+    int display_x = distancia_mapa, display_y = 55;
+    int tamanho_x = tamanho_display,tamanho_y = tamanho_mapa;
+    int reajuste_x = 10, reajuste_y = 15;
+    DrawRectangle(display_x,display_y,tamanho_x,tamanho_y,mapaFundo);
     
     Vector2 i,f;
     i.x = display_x; i.y = display_y; 
     f.x = display_x+tamanho_display; f.y = display_y; 
-    DrawLineEx(i,f,5,corBordas);
-    i.x = display_x; i.y = display_y+tamanho_display-10; 
-    f.x = display_x+tamanho_display; f.y = display_y+tamanho_display-10; 
-    DrawLineEx(i,f,5,corBordas);
+    DrawLineEx(i,f,5,corDisplay);
+    i.x = display_x; i.y = display_y+tamanho_y; 
+    f.x = display_x+tamanho_display; f.y = display_y+tamanho_y; 
+    DrawLineEx(i,f,5,corDisplay);
     i.x = display_x; i.y = display_y; 
-    f.x = display_x; f.y = display_y+tamanho_display-10; 
-    DrawLineEx(i,f,5,corBordas);
+    f.x = display_x; f.y = display_y+tamanho_y; 
+    DrawLineEx(i,f,5,corDisplay);
     i.x = display_x+tamanho_display; i.y = display_y; 
-    f.x = display_x+tamanho_display; f.y = display_y+tamanho_display-10; 
-    DrawLineEx(i,f,5,corBordas);
+    f.x = display_x+tamanho_display; f.y = display_y+tamanho_y; 
+    DrawLineEx(i,f,5,corDisplay);
 
-    DrawText("Info Jogador ",display_x+10,display_y+15,15,corBordas);
-    DrawText("Pontos restantes: ",display_x+10,display_y+40,15,WHITE);
-    DrawText("Vidas: ",display_x+10,display_y+70,15,WHITE);
+    DrawText("Info Jogador ",display_x+reajuste_x,display_y+reajuste_y,15,corDisplay);
+    reajuste_y += 25;
+    DrawText("Pontos restantes: ",display_x+reajuste_x,display_y+reajuste_y,15,WHITE);
+    DrawText(TextFormat("%d",mapa_info.total_pontos),display_x+tamanho_x-MeasureText("888",15)-10,display_y+reajuste_y,15,WHITE);
+    reajuste_y += 30;
+    DrawText("Vidas: ",display_x+reajuste_x,display_y+reajuste_y,15,WHITE);
+    DrawText(TextFormat("%d",3),display_x+tamanho_x-MeasureText("8",15)-10,display_y+reajuste_y,15,WHITE);
     
-    i.x = display_x+10; i.y = display_y+105; 
-    f.x = display_x+tamanho_display-10; f.y = display_y+105; 
-    DrawLineEx(i,f,5,corBordas);
+    reajuste_y += 35;
+    DrawRectangle(display_x+reajuste_x,display_y+reajuste_y,tamanho_display-20,3,corDisplay);
 
-    DrawText("Info Mapa ",display_x+10,display_y+120,15,corBordas);
-    DrawText("Nome do Mapa: ",display_x+10,display_y+145,15,WHITE);
-    DrawText("Total de Pontos: ",display_x+10,display_y+175,15,WHITE);
+    reajuste_y += 15;
+    DrawText("Info Mapa ",display_x+reajuste_x,display_y+reajuste_y,15,corDisplay);
+    reajuste_y += 25;
+    DrawText("Índice do Mapa: ",display_x+reajuste_x,display_y+reajuste_y,15,WHITE);
+    DrawText(TextFormat("%d",mapa_info.indice_escolhido),display_x+tamanho_x-MeasureText("8",15)-10,display_y+reajuste_y,15,WHITE);
+    reajuste_y += 30;
+    DrawText("Total de Pontos: ",display_x+reajuste_x,display_y+reajuste_y,15,WHITE);
+    DrawText(TextFormat("%d",mapa_info.total_pontos),display_x+tamanho_x-MeasureText("888",15)-10,display_y+reajuste_y,15,WHITE);
+
+    reajuste_y += 30;
+    DrawRectangle(display_x+reajuste_x,display_y+reajuste_y,tamanho_display-20,3,corDisplay);
+
+    reajuste_y += 15;
+    DrawText("Ranking ",display_x+reajuste_x,display_y+reajuste_y,15,corDisplay);
 }
 
 void iniciar_grafico()
@@ -197,7 +215,8 @@ void iniciar_grafico()
         if(multi_alpha > 1.0f){multi_alpha = 1.0f; sentido_alpha=-1;}
 
         BeginDrawing();
-            ClearBackground(corFundo);
+            ClearBackground(corFundo1);
+            DrawRectangleGradientH(0,0,largura_tela,altura_tela,corFundo1,corFundo2);
             DrawText("Pacman",20,10,40,WHITE);
             DrawText("Construção de Algoritimos",20+MeasureText("Pacman",40)+10,30,15,WHITE);
             DrawText("Erick Alves e Kauã Soares",20,altura_tela-30,15,WHITE);

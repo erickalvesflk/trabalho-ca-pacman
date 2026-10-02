@@ -28,6 +28,7 @@ struct Mapa
     int spawn_jogador[2];
     int spawn_fantasmas[2];
     int total_pontos;
+    int indice_escolhido;
 };
 extern struct Mapa mapa_info;
 
