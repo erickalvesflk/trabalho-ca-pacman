@@ -72,8 +72,12 @@ void desenhar_parede(int i, int j, int x, int y)
                     fim_borda.y = y + tamanho_bloco;
                 }
 
-                DrawLineEx(inicio_borda, fim_borda,
-                           espessura_parede, corBordas);
+                DrawLineEx(
+                    inicio_borda,
+                    fim_borda,
+                    espessura_parede,
+                    corBordas
+                );
             }
         }
     }
@@ -106,7 +110,12 @@ void desenhar_pacman(struct entidade ent)
 
     int t = (int)(tamanho_bloco / 2.5);
 
-    DrawCircle(ent.pos.x, ent.pos.y, t, ent.cor);
+    DrawCircle(
+        ent.pos.x,
+        ent.pos.y,
+        t,
+        ent.cor
+    );
 }
 
 
@@ -116,6 +125,9 @@ int sentido_alpha = -1;
 
 Vector2 pos_spawn_fantasmas = {0, 0};
 Vector2 pos_spawn_jogador = {0, 0};
+
+// Indica se as entidades ja foram colocadas no spawn
+int entidades_inicializadas = 0;
 
 
 void desenhar_mapa()
@@ -205,34 +217,39 @@ void desenhar_mapa()
     }
 
 
+    // Coloca as entidades no spawn apenas na primeira vez
+    if(!entidades_inicializadas)
+    {
+        for(int i = 0; i < quantidade_entidades; ++i)
+        {
+            if(entidades_para_render[i].tipo == entidade_fantasma)
+            {
+                entidades_para_render[i].pos = pos_spawn_fantasmas;
+            }
+            else if(entidades_para_render[i].tipo == entidade_pacman)
+            {
+                entidades_para_render[i].pos = pos_spawn_jogador;
+            }
+        }
+
+        entidades_inicializadas = 1;
+    }
+
+
     // Desenha as entidades
     for(int i = 0; i < quantidade_entidades; ++i)
     {
-        struct entidade *ent = &entidades_para_render[i];
+        struct entidade ent = entidades_para_render[i];
 
-        switch(ent->tipo)
+        switch(ent.tipo)
         {
             case entidade_fantasma:
-
-                if(ent->pos.x == 0)
-                {
-                    ent->pos = pos_spawn_fantasmas;
-                }
-
-                desenhar_fantasma(*ent);
+                desenhar_fantasma(ent);
                 break;
-
 
             case entidade_pacman:
-
-                if(ent->pos.x == 0)
-                {
-                    ent->pos = pos_spawn_jogador;
-                }
-
-                desenhar_pacman(*ent);
+                desenhar_pacman(ent);
                 break;
-
 
             default:
                 break;
@@ -374,8 +391,11 @@ void iniciar_grafico()
         }
 
 
-        // Atualiza a logica dos fantasmas
-        atualizar_fantasmas();
+        // So movimenta os fantasmas depois que receberam o spawn
+        if(entidades_inicializadas)
+        {
+            atualizar_fantasmas();
+        }
 
 
         BeginDrawing();
