@@ -1,7 +1,20 @@
 #include <stdio.h>
+#include "raylib.h"
+#include "geranciador_de_mapa.h"
+#include "entidades.h"
+#include "grafico_jogo.h"
 
 int main()
 {
-    printf("Trabalho pacman");
+    puts("Trabalho pacman");
+    int r = iniciar_data_mapas();
+    
+    escolher_mapa();
+    fechar_data_mapas();
+    printf("Quantidade total de pontos: %d",mapa_info.total_pontos);
+
+    gerar_entidades();
+    iniciar_grafico();
+
     return 0;
 }
