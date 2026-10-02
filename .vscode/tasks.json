@@ -9,7 +9,7 @@
                 "-g",
 
                 "-I${workspaceFolder}/include",
-                "-IC:/raylib/raylib/src",
+                "-IC:/msys64/ucrt64/include",
 
                 "${workspaceFolder}/src/main.c",
                 "${workspaceFolder}/src/grafico_jogo.c",
@@ -17,7 +17,7 @@
                 "${workspaceFolder}/src/entidades.c",
                 "${workspaceFolder}/src/fantasmas.c",
 
-                "-LC:/raylib/raylib/src",
+                "-LC:/msys64/ucrt64/lib",
                 "-lraylib",
 
                 "-lopengl32",
