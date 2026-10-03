@@ -53,17 +53,14 @@ int escolher_mapa()
     srand(time(NULL)); // Define uma seed de geração de acordo com o horario (Para aumentar a randomização)
     int escolhido = rand() % quant + 1; 
     mapa_info.indice_escolhido = escolhido;
-    fseek(arquivo_ptr, 0, SEEK_SET); // Retorna o ponteiro ao inicio do arquivo
 
+    fseek(arquivo_ptr, 0, SEEK_SET); // Retorna o ponteiro ao inicio do arquivo
     char c = fgetc(arquivo_ptr);
 
     int m = 0, i = 0, j = 0;
     while ((m != escolhido) || (c != '!')) // Repete ate achar "!" do 'm' alvo.
     {
-        if(c == 'M')
-        {
-            ++m;
-        }
+        if(c == 'M'){++m;}
         
         if(m == escolhido && (c == '.' || c == '#' || c == 'j' || c == 'f' || c == '-'))
         {
