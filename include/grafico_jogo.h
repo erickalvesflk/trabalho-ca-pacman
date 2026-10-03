@@ -1,3 +1,9 @@
+/*
+Gráficos
+------------------------------------------
+Módulo responsavel pelo criação e funcionamento do gráfico, criando toda a parte visual
+do jogo.
+*/
 #include "raylib.h"
 #include "entidades.h"
 #include "geranciador_de_mapa.h"
@@ -12,5 +18,13 @@
 #define tamanho_bloco (tamanho_mapa/tamanho_grid)
 #define tamanho_display tamanho_mapa/2
 
+enum grafico_jogo // Possiveis retornos do grafico
+{
+    retorno_sair,
+    retorno_derrota,
+    retorno_vitoria,
+    retorno_falha_mapa
+};
 
-void iniciar_grafico(void); // Roda o gráfico do jogo
+
+enum grafico_jogo iniciar_grafico(void); // Roda o gráfico do jogo

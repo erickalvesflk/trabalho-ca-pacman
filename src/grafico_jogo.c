@@ -95,6 +95,7 @@ void desenhar_mapa() // Desenha o mapa com entidades
     {
         for (int j = 0; j < tamanho_grid; ++j)
         {
+            // Determina o desenho a partir do tipo do bloco analisado
             switch (mapa_info.mapa[i][j].tipo)
             {
             case bloco_parede:
@@ -133,10 +134,10 @@ void desenhar_mapa() // Desenha o mapa com entidades
             default:
                 break;
             }
-            eixo_x += tamanho_bloco;
+            eixo_x += tamanho_bloco; // desloca a coordenada (x) para o proximo desenho
         }
-        eixo_y += tamanho_bloco;
-        eixo_x = x_mapa;
+        eixo_y += tamanho_bloco; // desloca a coordenada (y) para o proximo desenho
+        eixo_x = x_mapa; // Reseta a coordenada (x) para o inicio do mapa
 
         //Desenhando entidades
         for(int i = 0; i < quantidade_entidades; ++i)
@@ -204,7 +205,7 @@ void desenhar_display()
     DrawText(TextFormat("%d",mapa_info.total_pontos),display_x+tamanho_x-MeasureText("888",15)-10,display_y+reajuste_y,15,WHITE);
 }
 
-void iniciar_grafico()
+enum grafico_jogo iniciar_grafico()
 {
 
     InitWindow(largura_tela, altura_tela, "PacMan - Trabalho Contrução de Algoritimos");
@@ -225,11 +226,12 @@ void iniciar_grafico()
             DrawText("Construção de Algoritimos",20+MeasureText("Pacman",40)+10,30,15,WHITE);
             DrawText("Erick Alves e Kauã Soares",20,altura_tela-30,15,WHITE);
 
-            if(!mapa_escolhido){return;}
+            if(!mapa_escolhido){return retorno_falha_mapa;}
 
             desenhar_mapa();
             desenhar_display();
         EndDrawing();
     }
     CloseWindow();
+    return retorno_sair;
 }

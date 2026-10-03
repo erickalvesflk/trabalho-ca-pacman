@@ -14,7 +14,7 @@ int main()
     printf("Quantidade total de pontos: %d",mapa_info.total_pontos);
 
     gerar_entidades();
-    iniciar_grafico();
+    enum grafico_jogo motivo_retorno = iniciar_grafico();
 
     return 0;
 }
