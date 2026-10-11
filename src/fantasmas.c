@@ -166,10 +166,26 @@ int contar_direcoes_livres(struct entidade *fantasma)
 }
 
 
+// Calcula uma distancia simples entre dois pontos.
+// Nao precisamos de raiz quadrada para comparar as distancias.
+float calcular_distancia(
+    float x1,
+    float y1,
+    float x2,
+    float y2)
+{
+    float diferenca_x = x2 - x1;
+    float diferenca_y = y2 - y1;
+
+    return
+        (diferenca_x * diferenca_x) +
+        (diferenca_y * diferenca_y);
+}
+
+
 void escolher_nova_direcao(struct entidade *fantasma)
 {
-    enum direcao direcoes_livres[4];
-    int quantidade = 0;
+    struct entidade *pacman = &entidades_para_render[0];
 
     enum direcao oposta =
         direcao_oposta(fantasma->direcao_atual);
@@ -182,34 +198,86 @@ void escolher_nova_direcao(struct entidade *fantasma)
         direita
     };
 
-    // Guarda todas as direcoes possiveis,
-    // menos a direcao de onde o fantasma veio
+    enum direcao melhor_direcao =
+        fantasma->direcao_atual;
+
+    float melhor_distancia = -1.0f;
+
+    int encontrou_direcao = 0;
+
+
+    // Testa cada caminho disponivel
     for(int i = 0; i < 4; i++)
     {
-        if(direcoes[i] == oposta)
+        enum direcao direcao_testada = direcoes[i];
+
+        // Evita voltar imediatamente pelo mesmo caminho
+        if(direcao_testada == oposta)
         {
             continue;
         }
 
-        if(pode_mover_fantasma(fantasma, direcoes[i]))
+        if(!pode_mover_fantasma(
+            fantasma,
+            direcao_testada))
         {
-            direcoes_livres[quantidade] = direcoes[i];
-            quantidade++;
+            continue;
+        }
+
+
+        float proximo_x = fantasma->pos.x;
+        float proximo_y = fantasma->pos.y;
+
+        // Simula a proxima posicao do fantasma
+        switch(direcao_testada)
+        {
+            case cima:
+                proximo_y -= tamanho_bloco;
+                break;
+
+            case baixo:
+                proximo_y += tamanho_bloco;
+                break;
+
+            case esquerda:
+                proximo_x -= tamanho_bloco;
+                break;
+
+            case direita:
+                proximo_x += tamanho_bloco;
+                break;
+        }
+
+
+        float distancia =
+            calcular_distancia(
+                proximo_x,
+                proximo_y,
+                pacman->pos.x,
+                pacman->pos.y
+            );
+
+
+        // Guarda o caminho que mais aproxima do Pac-Man
+        if(!encontrou_direcao ||
+           distancia < melhor_distancia)
+        {
+            melhor_distancia = distancia;
+            melhor_direcao = direcao_testada;
+            encontrou_direcao = 1;
         }
     }
 
-    // Escolhe uma das direcoes disponiveis
-    if(quantidade > 0)
+
+    if(encontrou_direcao)
     {
-        int escolha = rand() % quantidade;
-
-        fantasma->direcao_atual =
-            direcoes_livres[escolha];
-
+        fantasma->direcao_atual = melhor_direcao;
         return;
     }
 
-    // Beco sem saida: permite voltar
+
+    // Se chegou em um beco sem saida,
+    // permite voltar pelo caminho anterior
     if(pode_mover_fantasma(fantasma, oposta))
     {
         fantasma->direcao_atual = oposta;
