@@ -113,7 +113,7 @@ void desenhar_pacman(struct entidade ent, struct quadros_entidade quadros_pacman
     const int total_sprites = quadros_pacman.quant_quadros * 4;
     int pacman_sprite_i = (int)(sprite_atual * quadros_pacman.quant_quadros);
 
-    int p = (int)(tamanho_bloco*0.30);
+    int p = (int)(tamanho_bloco*0.15);
 
     Rectangle recBase = {
         0.0f + (pacman_sprite_i * quadros_pacman.textura.width/total_sprites),
