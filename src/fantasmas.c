@@ -1,6 +1,7 @@
 #include "fantasmas.h"
 #include "grafico_jogo.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 
 int posicao_livre(float x, float y)
@@ -23,6 +24,22 @@ int posicao_livre(float x, float y)
     }
 
     return 1;
+}
+
+
+void posicao_para_grid(
+    Vector2 posicao,
+    int *linha,
+    int *coluna)
+{
+    int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
+    int y_mapa = (altura_tela - tamanho_mapa) / 2;
+
+    *coluna =
+        (int)((posicao.x - x_mapa) / tamanho_bloco);
+
+    *linha =
+        (int)((posicao.y - y_mapa) / tamanho_bloco);
 }
 
 
@@ -118,8 +135,6 @@ int esta_no_centro_bloco(struct entidade *fantasma)
 
     int centro_bloco = tamanho_bloco / 2;
 
-    // Pequena margem porque a velocidade pode fazer
-    // o fantasma passar alguns pixels do centro
     int margem = 2;
 
     if(centro_x >= centro_bloco - margem &&
@@ -166,8 +181,6 @@ int contar_direcoes_livres(struct entidade *fantasma)
 }
 
 
-// Calcula uma distancia simples entre dois pontos.
-// Nao precisamos de raiz quadrada para comparar as distancias.
 float calcular_distancia(
     float x1,
     float y1,
@@ -206,12 +219,10 @@ void escolher_nova_direcao(struct entidade *fantasma)
     int encontrou_direcao = 0;
 
 
-    // Testa cada caminho disponivel
     for(int i = 0; i < 4; i++)
     {
         enum direcao direcao_testada = direcoes[i];
 
-        // Evita voltar imediatamente pelo mesmo caminho
         if(direcao_testada == oposta)
         {
             continue;
@@ -228,7 +239,6 @@ void escolher_nova_direcao(struct entidade *fantasma)
         float proximo_x = fantasma->pos.x;
         float proximo_y = fantasma->pos.y;
 
-        // Simula a proxima posicao do fantasma
         switch(direcao_testada)
         {
             case cima:
@@ -258,7 +268,6 @@ void escolher_nova_direcao(struct entidade *fantasma)
             );
 
 
-        // Guarda o caminho que mais aproxima do Pac-Man
         if(!encontrou_direcao ||
            distancia < melhor_distancia)
         {
@@ -276,8 +285,6 @@ void escolher_nova_direcao(struct entidade *fantasma)
     }
 
 
-    // Se chegou em um beco sem saida,
-    // permite voltar pelo caminho anterior
     if(pode_mover_fantasma(fantasma, oposta))
     {
         fantasma->direcao_atual = oposta;
@@ -287,7 +294,6 @@ void escolher_nova_direcao(struct entidade *fantasma)
 
 void mover_fantasma(struct entidade *fantasma)
 {
-    // Se bateu em uma parede, precisa escolher outro caminho
     if(!pode_mover_fantasma(
         fantasma,
         fantasma->direcao_atual))
@@ -295,8 +301,6 @@ void mover_fantasma(struct entidade *fantasma)
         escolher_nova_direcao(fantasma);
     }
 
-    // Se estiver no centro de um bloco e houver mais de
-    // uma opcao, significa que chegou a um cruzamento
     else if(esta_no_centro_bloco(fantasma))
     {
         int quantidade =
@@ -308,13 +312,14 @@ void mover_fantasma(struct entidade *fantasma)
         }
     }
 
-    // Confere novamente antes de andar
+
     if(!pode_mover_fantasma(
         fantasma,
         fantasma->direcao_atual))
     {
         return;
     }
+
 
     switch(fantasma->direcao_atual)
     {
@@ -339,6 +344,8 @@ void mover_fantasma(struct entidade *fantasma)
 
 void atualizar_fantasmas(void)
 {
+    static int contador_debug = 0;
+
     for(int i = 0; i < quantidade_entidades; i++)
     {
         if(entidades_para_render[i].tipo != entidade_fantasma)
@@ -347,5 +354,45 @@ void atualizar_fantasmas(void)
         }
 
         mover_fantasma(&entidades_para_render[i]);
+
+
+        // Mostra a posicao no grid apenas algumas vezes
+        // para nao lotar o terminal
+        if(contador_debug >= FPS)
+        {
+            int linha_fantasma;
+            int coluna_fantasma;
+
+            int linha_pacman;
+            int coluna_pacman;
+
+            posicao_para_grid(
+                entidades_para_render[i].pos,
+                &linha_fantasma,
+                &coluna_fantasma
+            );
+
+            posicao_para_grid(
+                entidades_para_render[0].pos,
+                &linha_pacman,
+                &coluna_pacman
+            );
+
+            printf(
+                "\nFantasma: linha %d coluna %d | Pac-Man: linha %d coluna %d",
+                linha_fantasma,
+                coluna_fantasma,
+                linha_pacman,
+                coluna_pacman
+            );
+        }
+    }
+
+
+    contador_debug++;
+
+    if(contador_debug > FPS)
+    {
+        contador_debug = 0;
     }
 }
