@@ -10,6 +10,25 @@ struct posicao_grid
 };
 
 
+int linha_tem_tunel_fantasma(int linha)
+{
+    if(linha < 0 || linha >= tamanho_grid)
+    {
+        return 0;
+    }
+
+    // O tunel existe somente quando as duas
+    // extremidades da linha sao livres
+    if(mapa_info.mapa[linha][0].tipo == bloco_parede ||
+       mapa_info.mapa[linha][tamanho_grid - 1].tipo == bloco_parede)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+
 int posicao_livre(float x, float y)
 {
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
@@ -18,9 +37,20 @@ int posicao_livre(float x, float y)
     int coluna = (int)((x - x_mapa) / tamanho_bloco);
     int linha = (int)((y - y_mapa) / tamanho_bloco);
 
-    if(linha < 0 || linha >= tamanho_grid ||
-       coluna < 0 || coluna >= tamanho_grid)
+    if(linha < 0 || linha >= tamanho_grid)
     {
+        return 0;
+    }
+
+    // Permite sair horizontalmente apenas
+    // quando estiver em uma linha de tunel
+    if(coluna < 0 || coluna >= tamanho_grid)
+    {
+        if(linha_tem_tunel_fantasma(linha))
+        {
+            return 1;
+        }
+
         return 0;
     }
 
@@ -110,27 +140,6 @@ int pode_mover_fantasma(
 }
 
 
-enum direcao direcao_oposta(enum direcao direcao)
-{
-    switch(direcao)
-    {
-        case cima:
-            return baixo;
-
-        case baixo:
-            return cima;
-
-        case esquerda:
-            return direita;
-
-        case direita:
-            return esquerda;
-    }
-
-    return direcao;
-}
-
-
 int esta_no_centro_bloco(struct entidade *fantasma)
 {
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
@@ -160,7 +169,6 @@ int esta_no_centro_bloco(struct entidade *fantasma)
 }
 
 
-// Verifica se uma celula pode fazer parte do caminho
 int celula_livre(int linha, int coluna)
 {
     if(linha < 0 || linha >= tamanho_grid ||
@@ -179,8 +187,31 @@ int celula_livre(int linha, int coluna)
 }
 
 
-// Usa BFS para descobrir qual deve ser
-// o primeiro passo em direcao ao Pac-Man
+// Converte uma coluna que saiu pela lateral
+// para o outro lado do mapa quando existe tunel
+int ajustar_coluna_tunel(int linha, int coluna)
+{
+    if(!linha_tem_tunel_fantasma(linha))
+    {
+        return coluna;
+    }
+
+    if(coluna < 0)
+    {
+        return tamanho_grid - 1;
+    }
+
+    if(coluna >= tamanho_grid)
+    {
+        return 0;
+    }
+
+    return coluna;
+}
+
+
+// Usa BFS para descobrir o primeiro passo
+// do menor caminho ate o Pac-Man
 enum direcao buscar_direcao_bfs(
     struct entidade *fantasma)
 {
@@ -206,7 +237,6 @@ enum direcao buscar_direcao_bfs(
     );
 
 
-    // Protecao contra posicoes invalidas
     if(!celula_livre(inicio_linha, inicio_coluna) ||
        !celula_livre(destino_linha, destino_coluna))
     {
@@ -226,7 +256,6 @@ enum direcao buscar_direcao_bfs(
     int fim_fila = 0;
 
 
-    // Primeira posicao da busca
     fila[fim_fila].linha = inicio_linha;
     fila[fim_fila].coluna = inicio_coluna;
     fim_fila++;
@@ -254,7 +283,6 @@ enum direcao buscar_direcao_bfs(
     };
 
 
-    // Explora o mapa ate encontrar o Pac-Man
     while(inicio_fila < fim_fila)
     {
         struct posicao_grid atual =
@@ -277,6 +305,15 @@ enum direcao buscar_direcao_bfs(
 
             int nova_coluna =
                 atual.coluna + movimento_coluna[i];
+
+
+            // Se tentou sair pela lateral em uma
+            // linha de tunel, aparece do outro lado
+            nova_coluna =
+                ajustar_coluna_tunel(
+                    nova_linha,
+                    nova_coluna
+                );
 
 
             if(!celula_livre(
@@ -306,16 +343,12 @@ enum direcao buscar_direcao_bfs(
     }
 
 
-    // Se nao encontrou caminho, continua como estava
     if(!visitado[destino_linha][destino_coluna])
     {
         return fantasma->direcao_atual;
     }
 
 
-    // Comeca no Pac-Man e volta pelo caminho
-    // ate encontrar a primeira celula depois
-    // da posicao do fantasma
     struct posicao_grid passo;
 
     passo.linha = destino_linha;
@@ -346,8 +379,20 @@ enum direcao buscar_direcao_bfs(
     }
 
 
-    // Converte o primeiro passo do caminho
-    // para uma direcao do jogo
+    // Caso especial: o primeiro passo usa o tunel
+    if(inicio_coluna == 0 &&
+       passo.coluna == tamanho_grid - 1)
+    {
+        return esquerda;
+    }
+
+    if(inicio_coluna == tamanho_grid - 1 &&
+       passo.coluna == 0)
+    {
+        return direita;
+    }
+
+
     if(passo.linha < inicio_linha)
     {
         return cima;
@@ -373,10 +418,38 @@ enum direcao buscar_direcao_bfs(
 }
 
 
+void verificar_tunel_fantasma(struct entidade *fantasma)
+{
+    int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
+    int y_mapa = (altura_tela - tamanho_mapa) / 2;
+
+    int linha =
+        (int)((fantasma->pos.y - y_mapa) / tamanho_bloco);
+
+    if(!linha_tem_tunel_fantasma(linha))
+    {
+        return;
+    }
+
+
+    float limite_esquerdo = x_mapa;
+    float limite_direito = x_mapa + tamanho_mapa;
+
+
+    if(fantasma->pos.x < limite_esquerdo)
+    {
+        fantasma->pos.x = limite_direito - 1;
+    }
+
+    else if(fantasma->pos.x > limite_direito)
+    {
+        fantasma->pos.x = limite_esquerdo + 1;
+    }
+}
+
+
 void mover_fantasma(struct entidade *fantasma)
 {
-    // A decisao do BFS acontece quando o fantasma
-    // esta aproximadamente no centro de uma celula
     if(esta_no_centro_bloco(fantasma))
     {
         enum direcao nova_direcao =
@@ -392,8 +465,6 @@ void mover_fantasma(struct entidade *fantasma)
     }
 
 
-    // Se a direcao atual estiver bloqueada,
-    // tenta calcular novamente o caminho
     if(!pode_mover_fantasma(
         fantasma,
         fantasma->direcao_atual))
@@ -433,6 +504,9 @@ void mover_fantasma(struct entidade *fantasma)
             fantasma->pos.x += fantasma->velocidade;
             break;
     }
+
+
+    verificar_tunel_fantasma(fantasma);
 }
 
 
