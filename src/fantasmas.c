@@ -10,6 +10,17 @@ struct posicao_grid
 };
 
 
+// Personalidades dos fantasmas
+enum personalidade_fantasma
+{
+    perseguidor,
+    miope,
+    previsor,
+    emboscador,
+    imprevisivel
+};
+
+
 int linha_tem_tunel_fantasma(int linha)
 {
     if(linha < 0 || linha >= tamanho_grid)
@@ -211,29 +222,19 @@ int ajustar_coluna_tunel(int linha, int coluna)
 
 
 // Usa BFS para descobrir o primeiro passo
-// do menor caminho ate o Pac-Man
+// do menor caminho ate uma celula de destino
 enum direcao buscar_direcao_bfs(
-    struct entidade *fantasma)
+    struct entidade *fantasma,
+    int destino_linha,
+    int destino_coluna)
 {
-    struct entidade *pacman =
-        &entidades_para_render[0];
-
     int inicio_linha;
     int inicio_coluna;
-
-    int destino_linha;
-    int destino_coluna;
 
     posicao_para_grid(
         fantasma->pos,
         &inicio_linha,
         &inicio_coluna
-    );
-
-    posicao_para_grid(
-        pacman->pos,
-        &destino_linha,
-        &destino_coluna
     );
 
 
@@ -307,8 +308,6 @@ enum direcao buscar_direcao_bfs(
                 atual.coluna + movimento_coluna[i];
 
 
-            // Se tentou sair pela lateral em uma
-            // linha de tunel, aparece do outro lado
             nova_coluna =
                 ajustar_coluna_tunel(
                     nova_linha,
@@ -418,6 +417,116 @@ enum direcao buscar_direcao_bfs(
 }
 
 
+// Retorna a personalidade de acordo
+// com a posicao do fantasma no vetor
+enum personalidade_fantasma obter_personalidade(
+    int indice)
+{
+    switch(indice)
+    {
+        case 1:
+            return perseguidor;
+
+        case 2:
+            return miope;
+
+        case 3:
+            return previsor;
+
+        case 4:
+            return emboscador;
+
+        case 5:
+            return imprevisivel;
+
+        default:
+            return perseguidor;
+    }
+}
+
+
+// Decide qual direcao cada personalidade deseja seguir
+enum direcao decidir_direcao_fantasma(
+    struct entidade *fantasma,
+    int indice)
+{
+    struct entidade *pacman =
+        &entidades_para_render[0];
+
+    int pacman_linha;
+    int pacman_coluna;
+
+    posicao_para_grid(
+        pacman->pos,
+        &pacman_linha,
+        &pacman_coluna
+    );
+
+
+    enum personalidade_fantasma personalidade =
+        obter_personalidade(indice);
+
+
+    switch(personalidade)
+    {
+        case perseguidor:
+
+            // Vermelho:
+            // persegue diretamente a posicao
+            // atual do Pac-Man
+            return buscar_direcao_bfs(
+                fantasma,
+                pacman_linha,
+                pacman_coluna
+            );
+
+
+        case miope:
+
+            // O comportamento proprio do amarelo
+            // sera implementado na proxima etapa
+            return buscar_direcao_bfs(
+                fantasma,
+                pacman_linha,
+                pacman_coluna
+            );
+
+
+        case previsor:
+
+            // Temporariamente usa a perseguicao normal
+            return buscar_direcao_bfs(
+                fantasma,
+                pacman_linha,
+                pacman_coluna
+            );
+
+
+        case emboscador:
+
+            // Temporariamente usa a perseguicao normal
+            return buscar_direcao_bfs(
+                fantasma,
+                pacman_linha,
+                pacman_coluna
+            );
+
+
+        case imprevisivel:
+
+            // Temporariamente usa a perseguicao normal
+            return buscar_direcao_bfs(
+                fantasma,
+                pacman_linha,
+                pacman_coluna
+            );
+    }
+
+
+    return fantasma->direcao_atual;
+}
+
+
 void verificar_tunel_fantasma(struct entidade *fantasma)
 {
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
@@ -448,12 +557,17 @@ void verificar_tunel_fantasma(struct entidade *fantasma)
 }
 
 
-void mover_fantasma(struct entidade *fantasma)
+void mover_fantasma(
+    struct entidade *fantasma,
+    int indice)
 {
     if(esta_no_centro_bloco(fantasma))
     {
         enum direcao nova_direcao =
-            buscar_direcao_bfs(fantasma);
+            decidir_direcao_fantasma(
+                fantasma,
+                indice
+            );
 
         if(pode_mover_fantasma(
             fantasma,
@@ -470,7 +584,10 @@ void mover_fantasma(struct entidade *fantasma)
         fantasma->direcao_atual))
     {
         enum direcao nova_direcao =
-            buscar_direcao_bfs(fantasma);
+            decidir_direcao_fantasma(
+                fantasma,
+                indice
+            );
 
         if(pode_mover_fantasma(
             fantasma,
@@ -521,7 +638,8 @@ void atualizar_fantasmas(void)
         }
 
         mover_fantasma(
-            &entidades_para_render[i]
+            &entidades_para_render[i],
+            i
         );
     }
 }
