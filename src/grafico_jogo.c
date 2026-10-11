@@ -1,5 +1,6 @@
 #include "grafico_jogo.h"
 #include "fantasmas.h"
+#include "pacman.h"
 
 // Cores do jogo
 const Color mapaFundo = { 0, 0, 0, 255 };  
@@ -391,9 +392,10 @@ void iniciar_grafico()
         }
 
 
-        // So movimenta os fantasmas depois que receberam o spawn
+        // So movimenta as entidades depois que receberam o spawn
         if(entidades_inicializadas)
         {
+            atualizar_pacman();
             atualizar_fantasmas();
         }
 
