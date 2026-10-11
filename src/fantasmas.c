@@ -1,12 +1,43 @@
 #include "fantasmas.h"
 #include "grafico_jogo.h"
 
+
+int posicao_livre(float x, float y)
+{
+    // Inicio do mapa na tela
+    int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
+    int y_mapa = (altura_tela - tamanho_mapa) / 2;
+
+    // Converte a posicao em pixels para linha e coluna do mapa
+    int coluna = (int)((x - x_mapa) / tamanho_bloco);
+    int linha = (int)((y - y_mapa) / tamanho_bloco);
+
+    // Impede que o fantasma saia dos limites do mapa
+    if(linha < 0 || linha >= tamanho_grid ||
+       coluna < 0 || coluna >= tamanho_grid)
+    {
+        return 0;
+    }
+
+    // Impede que o fantasma entre em uma parede
+    if(mapa_info.mapa[linha][coluna].tipo == bloco_parede)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+
 int pode_mover_fantasma(struct entidade *fantasma, enum direcao direcao)
 {
     float proximo_x = fantasma->pos.x;
     float proximo_y = fantasma->pos.y;
 
-    // Calcula onde o fantasma estaria depois do movimento
+    // Metade do tamanho usado para desenhar o fantasma
+    float metade_tamanho = (tamanho_bloco / 1.5f) / 2.0f;
+
+    // Calcula a proxima posicao do fantasma
     switch(direcao)
     {
         case cima:
@@ -26,23 +57,31 @@ int pode_mover_fantasma(struct entidade *fantasma, enum direcao direcao)
             break;
     }
 
-    // Inicio do mapa na tela
-    int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
-    int y_mapa = (altura_tela - tamanho_mapa) / 2;
-
-    // Converte a posicao em pixels para linha e coluna do mapa
-    int coluna = (int)((proximo_x - x_mapa) / tamanho_bloco);
-    int linha = (int)((proximo_y - y_mapa) / tamanho_bloco);
-
-    // Impede que o fantasma saia dos limites do mapa
-    if(linha < 0 || linha >= tamanho_grid ||
-       coluna < 0 || coluna >= tamanho_grid)
+    // Verifica os quatro cantos do fantasma
+    if(!posicao_livre(
+        proximo_x - metade_tamanho,
+        proximo_y - metade_tamanho))
     {
         return 0;
     }
 
-    // Impede que o fantasma entre em uma parede
-    if(mapa_info.mapa[linha][coluna].tipo == bloco_parede)
+    if(!posicao_livre(
+        proximo_x + metade_tamanho,
+        proximo_y - metade_tamanho))
+    {
+        return 0;
+    }
+
+    if(!posicao_livre(
+        proximo_x - metade_tamanho,
+        proximo_y + metade_tamanho))
+    {
+        return 0;
+    }
+
+    if(!posicao_livre(
+        proximo_x + metade_tamanho,
+        proximo_y + metade_tamanho))
     {
         return 0;
     }
