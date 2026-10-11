@@ -16,6 +16,7 @@
                 "${workspaceFolder}/src/geranciador_de_mapa.c",
                 "${workspaceFolder}/src/entidades.c",
                 "${workspaceFolder}/src/fantasmas.c",
+                "${workspaceFolder}/src/pacman.c",
 
                 "-LC:/msys64/ucrt64/lib",
                 "-lraylib",
