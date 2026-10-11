@@ -90,8 +90,37 @@ int pode_mover_fantasma(struct entidade *fantasma, enum direcao direcao)
 }
 
 
+void escolher_nova_direcao(struct entidade *fantasma)
+{
+    enum direcao direcoes[4] =
+    {
+        cima,
+        baixo,
+        esquerda,
+        direita
+    };
+
+    // Procura uma direcao livre
+    for(int i = 0; i < 4; i++)
+    {
+        if(pode_mover_fantasma(fantasma, direcoes[i]))
+        {
+            fantasma->direcao_atual = direcoes[i];
+            return;
+        }
+    }
+}
+
+
 void mover_fantasma(struct entidade *fantasma)
 {
+    // Se encontrou uma parede, procura outra direcao
+    if(!pode_mover_fantasma(fantasma, fantasma->direcao_atual))
+    {
+        escolher_nova_direcao(fantasma);
+    }
+
+    // Verifica novamente antes de movimentar
     if(!pode_mover_fantasma(fantasma, fantasma->direcao_atual))
     {
         return;
