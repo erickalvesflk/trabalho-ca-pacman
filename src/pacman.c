@@ -6,6 +6,25 @@
 enum direcao direcao_desejada = direita;
 
 
+int linha_tem_tunel(int linha)
+{
+    if(linha < 0 || linha >= tamanho_grid)
+    {
+        return 0;
+    }
+
+    // So existe tunel se as duas extremidades
+    // da linha nao forem paredes
+    if(mapa_info.mapa[linha][0].tipo == bloco_parede ||
+       mapa_info.mapa[linha][tamanho_grid - 1].tipo == bloco_parede)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+
 int posicao_livre_pacman(float x, float y)
 {
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
@@ -14,14 +33,23 @@ int posicao_livre_pacman(float x, float y)
     int coluna = (int)((x - x_mapa) / tamanho_bloco);
     int linha = (int)((y - y_mapa) / tamanho_bloco);
 
-    // Impede que o Pac-Man saia dos limites do mapa
-    if(linha < 0 || linha >= tamanho_grid ||
-       coluna < 0 || coluna >= tamanho_grid)
+    if(linha < 0 || linha >= tamanho_grid)
     {
         return 0;
     }
 
-    // Impede que o Pac-Man entre em uma parede
+    // Permite ultrapassar horizontalmente apenas
+    // quando estiver em uma linha de tunel
+    if(coluna < 0 || coluna >= tamanho_grid)
+    {
+        if(linha_tem_tunel(linha))
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
     if(mapa_info.mapa[linha][coluna].tipo == bloco_parede)
     {
         return 0;
@@ -57,7 +85,6 @@ int pode_mover_pacman(struct entidade *pacman, enum direcao direcao)
             break;
     }
 
-    // Verifica as extremidades do Pac-Man
     if(!posicao_livre_pacman(
         proximo_x - raio,
         proximo_y - raio))
@@ -87,6 +114,37 @@ int pode_mover_pacman(struct entidade *pacman, enum direcao direcao)
     }
 
     return 1;
+}
+
+
+void verificar_tunel_pacman(struct entidade *pacman)
+{
+    int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
+    int y_mapa = (altura_tela - tamanho_mapa) / 2;
+
+    int linha =
+        (int)((pacman->pos.y - y_mapa) / tamanho_bloco);
+
+    if(!linha_tem_tunel(linha))
+    {
+        return;
+    }
+
+    float limite_esquerdo = x_mapa;
+    float limite_direito = x_mapa + tamanho_mapa;
+
+
+    // Saiu completamente pela esquerda
+    if(pacman->pos.x < limite_esquerdo)
+    {
+        pacman->pos.x = limite_direito - 1;
+    }
+
+    // Saiu completamente pela direita
+    else if(pacman->pos.x > limite_direito)
+    {
+        pacman->pos.x = limite_esquerdo + 1;
+    }
 }
 
 
@@ -124,6 +182,10 @@ void mover_pacman(struct entidade *pacman)
             pacman->pos.x += pacman->velocidade;
             break;
     }
+
+
+    // Depois do movimento verifica se atravessou um tunel
+    verificar_tunel_pacman(pacman);
 }
 
 
@@ -136,7 +198,6 @@ void atualizar_pacman(void)
         return;
     }
 
-    // Guarda a direcao que o jogador deseja seguir
     if(IsKeyDown(KEY_UP))
     {
         direcao_desejada = cima;
