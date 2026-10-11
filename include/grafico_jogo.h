@@ -17,6 +17,7 @@ do jogo.
 #define tamanho_mapa 450
 #define tamanho_bloco (tamanho_mapa/tamanho_grid)
 #define tamanho_display tamanho_mapa/2
+#define tamanho_sprite 16
 
 enum grafico_jogo // Possiveis retornos do grafico
 {
@@ -26,5 +27,10 @@ enum grafico_jogo // Possiveis retornos do grafico
     retorno_falha_mapa
 };
 
-
 enum grafico_jogo iniciar_grafico(void); // Roda o gráfico do jogo
+
+struct quadros_entidade
+{
+    Texture2D textura;
+    int quant_quadros;
+};
