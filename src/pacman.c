@@ -2,6 +2,10 @@
 #include "grafico_jogo.h"
 
 
+// Direcao que o jogador quer seguir assim que for possivel
+enum direcao direcao_desejada = direita;
+
+
 int posicao_livre_pacman(float x, float y)
 {
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
@@ -32,7 +36,6 @@ int pode_mover_pacman(struct entidade *pacman, enum direcao direcao)
     float proximo_x = pacman->pos.x;
     float proximo_y = pacman->pos.y;
 
-    // Mesmo tamanho usado para desenhar o Pac-Man
     float raio = tamanho_bloco / 2.5f;
 
     switch(direcao)
@@ -89,7 +92,13 @@ int pode_mover_pacman(struct entidade *pacman, enum direcao direcao)
 
 void mover_pacman(struct entidade *pacman)
 {
-    // So movimenta se o caminho estiver livre
+    // Primeiro tenta usar a direcao escolhida pelo jogador
+    if(pode_mover_pacman(pacman, direcao_desejada))
+    {
+        pacman->direcao_atual = direcao_desejada;
+    }
+
+    // Se a direcao atual estiver bloqueada, para
     if(!pode_mover_pacman(
         pacman,
         pacman->direcao_atual))
@@ -127,22 +136,22 @@ void atualizar_pacman(void)
         return;
     }
 
-    // Escolhe a direcao pelas setas do teclado
+    // Guarda a direcao que o jogador deseja seguir
     if(IsKeyDown(KEY_UP))
     {
-        pacman->direcao_atual = cima;
+        direcao_desejada = cima;
     }
     else if(IsKeyDown(KEY_DOWN))
     {
-        pacman->direcao_atual = baixo;
+        direcao_desejada = baixo;
     }
     else if(IsKeyDown(KEY_LEFT))
     {
-        pacman->direcao_atual = esquerda;
+        direcao_desejada = esquerda;
     }
     else if(IsKeyDown(KEY_RIGHT))
     {
-        pacman->direcao_atual = direita;
+        direcao_desejada = direita;
     }
 
     mover_pacman(pacman);
