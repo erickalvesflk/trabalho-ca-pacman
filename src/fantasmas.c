@@ -1,7 +1,13 @@
 #include "fantasmas.h"
 #include "grafico_jogo.h"
-#include <stdlib.h>
-#include <stdio.h>
+
+
+// Representa uma posicao dentro do grid
+struct posicao_grid
+{
+    int linha;
+    int coluna;
+};
 
 
 int posicao_livre(float x, float y)
@@ -43,12 +49,15 @@ void posicao_para_grid(
 }
 
 
-int pode_mover_fantasma(struct entidade *fantasma, enum direcao direcao)
+int pode_mover_fantasma(
+    struct entidade *fantasma,
+    enum direcao direcao)
 {
     float proximo_x = fantasma->pos.x;
     float proximo_y = fantasma->pos.y;
 
-    float metade_tamanho = (tamanho_bloco / 1.5f) / 2.0f;
+    float metade_tamanho =
+        (tamanho_bloco / 1.5f) / 2.0f;
 
     switch(direcao)
     {
@@ -127,14 +136,16 @@ int esta_no_centro_bloco(struct entidade *fantasma)
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
     int y_mapa = (altura_tela - tamanho_mapa) / 2;
 
-    int x_relativo = (int)(fantasma->pos.x - x_mapa);
-    int y_relativo = (int)(fantasma->pos.y - y_mapa);
+    int x_relativo =
+        (int)(fantasma->pos.x - x_mapa);
+
+    int y_relativo =
+        (int)(fantasma->pos.y - y_mapa);
 
     int centro_x = x_relativo % tamanho_bloco;
     int centro_y = y_relativo % tamanho_bloco;
 
     int centro_bloco = tamanho_bloco / 2;
-
     int margem = 2;
 
     if(centro_x >= centro_bloco - margem &&
@@ -149,175 +160,258 @@ int esta_no_centro_bloco(struct entidade *fantasma)
 }
 
 
-int contar_direcoes_livres(struct entidade *fantasma)
+// Verifica se uma celula pode fazer parte do caminho
+int celula_livre(int linha, int coluna)
 {
-    int quantidade = 0;
-
-    enum direcao oposta =
-        direcao_oposta(fantasma->direcao_atual);
-
-    enum direcao direcoes[4] =
+    if(linha < 0 || linha >= tamanho_grid ||
+       coluna < 0 || coluna >= tamanho_grid)
     {
-        cima,
-        baixo,
-        esquerda,
-        direita
-    };
-
-    for(int i = 0; i < 4; i++)
-    {
-        if(direcoes[i] == oposta)
-        {
-            continue;
-        }
-
-        if(pode_mover_fantasma(fantasma, direcoes[i]))
-        {
-            quantidade++;
-        }
+        return 0;
     }
 
-    return quantidade;
+    if(mapa_info.mapa[linha][coluna].tipo ==
+       bloco_parede)
+    {
+        return 0;
+    }
+
+    return 1;
 }
 
 
-float calcular_distancia(
-    float x1,
-    float y1,
-    float x2,
-    float y2)
+// Usa BFS para descobrir qual deve ser
+// o primeiro passo em direcao ao Pac-Man
+enum direcao buscar_direcao_bfs(
+    struct entidade *fantasma)
 {
-    float diferenca_x = x2 - x1;
-    float diferenca_y = y2 - y1;
+    struct entidade *pacman =
+        &entidades_para_render[0];
 
-    return
-        (diferenca_x * diferenca_x) +
-        (diferenca_y * diferenca_y);
-}
+    int inicio_linha;
+    int inicio_coluna;
+
+    int destino_linha;
+    int destino_coluna;
+
+    posicao_para_grid(
+        fantasma->pos,
+        &inicio_linha,
+        &inicio_coluna
+    );
+
+    posicao_para_grid(
+        pacman->pos,
+        &destino_linha,
+        &destino_coluna
+    );
 
 
-void escolher_nova_direcao(struct entidade *fantasma)
-{
-    struct entidade *pacman = &entidades_para_render[0];
-
-    enum direcao oposta =
-        direcao_oposta(fantasma->direcao_atual);
-
-    enum direcao direcoes[4] =
+    // Protecao contra posicoes invalidas
+    if(!celula_livre(inicio_linha, inicio_coluna) ||
+       !celula_livre(destino_linha, destino_coluna))
     {
-        cima,
-        baixo,
-        esquerda,
-        direita
+        return fantasma->direcao_atual;
+    }
+
+
+    int visitado[tamanho_grid][tamanho_grid] = {0};
+
+    struct posicao_grid anterior
+        [tamanho_grid][tamanho_grid];
+
+    struct posicao_grid fila
+        [tamanho_grid * tamanho_grid];
+
+    int inicio_fila = 0;
+    int fim_fila = 0;
+
+
+    // Primeira posicao da busca
+    fila[fim_fila].linha = inicio_linha;
+    fila[fim_fila].coluna = inicio_coluna;
+    fim_fila++;
+
+    visitado[inicio_linha][inicio_coluna] = 1;
+
+    anterior[inicio_linha][inicio_coluna].linha = -1;
+    anterior[inicio_linha][inicio_coluna].coluna = -1;
+
+
+    int movimento_linha[4] =
+    {
+        -1,
+        1,
+        0,
+        0
     };
 
-    enum direcao melhor_direcao =
-        fantasma->direcao_atual;
-
-    float melhor_distancia = -1.0f;
-
-    int encontrou_direcao = 0;
-
-
-    for(int i = 0; i < 4; i++)
+    int movimento_coluna[4] =
     {
-        enum direcao direcao_testada = direcoes[i];
+        0,
+        0,
+        -1,
+        1
+    };
 
-        if(direcao_testada == oposta)
+
+    // Explora o mapa ate encontrar o Pac-Man
+    while(inicio_fila < fim_fila)
+    {
+        struct posicao_grid atual =
+            fila[inicio_fila];
+
+        inicio_fila++;
+
+
+        if(atual.linha == destino_linha &&
+           atual.coluna == destino_coluna)
         {
-            continue;
-        }
-
-        if(!pode_mover_fantasma(
-            fantasma,
-            direcao_testada))
-        {
-            continue;
-        }
-
-
-        float proximo_x = fantasma->pos.x;
-        float proximo_y = fantasma->pos.y;
-
-        switch(direcao_testada)
-        {
-            case cima:
-                proximo_y -= tamanho_bloco;
-                break;
-
-            case baixo:
-                proximo_y += tamanho_bloco;
-                break;
-
-            case esquerda:
-                proximo_x -= tamanho_bloco;
-                break;
-
-            case direita:
-                proximo_x += tamanho_bloco;
-                break;
+            break;
         }
 
 
-        float distancia =
-            calcular_distancia(
-                proximo_x,
-                proximo_y,
-                pacman->pos.x,
-                pacman->pos.y
-            );
-
-
-        if(!encontrou_direcao ||
-           distancia < melhor_distancia)
+        for(int i = 0; i < 4; i++)
         {
-            melhor_distancia = distancia;
-            melhor_direcao = direcao_testada;
-            encontrou_direcao = 1;
+            int nova_linha =
+                atual.linha + movimento_linha[i];
+
+            int nova_coluna =
+                atual.coluna + movimento_coluna[i];
+
+
+            if(!celula_livre(
+                nova_linha,
+                nova_coluna))
+            {
+                continue;
+            }
+
+
+            if(visitado[nova_linha][nova_coluna])
+            {
+                continue;
+            }
+
+
+            visitado[nova_linha][nova_coluna] = 1;
+
+            anterior[nova_linha][nova_coluna] =
+                atual;
+
+            fila[fim_fila].linha = nova_linha;
+            fila[fim_fila].coluna = nova_coluna;
+
+            fim_fila++;
         }
     }
 
 
-    if(encontrou_direcao)
+    // Se nao encontrou caminho, continua como estava
+    if(!visitado[destino_linha][destino_coluna])
     {
-        fantasma->direcao_atual = melhor_direcao;
-        return;
+        return fantasma->direcao_atual;
     }
 
 
-    if(pode_mover_fantasma(fantasma, oposta))
+    // Comeca no Pac-Man e volta pelo caminho
+    // ate encontrar a primeira celula depois
+    // da posicao do fantasma
+    struct posicao_grid passo;
+
+    passo.linha = destino_linha;
+    passo.coluna = destino_coluna;
+
+
+    while(1)
     {
-        fantasma->direcao_atual = oposta;
+        struct posicao_grid pai =
+            anterior[passo.linha][passo.coluna];
+
+
+        if(pai.linha == inicio_linha &&
+           pai.coluna == inicio_coluna)
+        {
+            break;
+        }
+
+
+        if(pai.linha == -1 ||
+           pai.coluna == -1)
+        {
+            return fantasma->direcao_atual;
+        }
+
+
+        passo = pai;
     }
+
+
+    // Converte o primeiro passo do caminho
+    // para uma direcao do jogo
+    if(passo.linha < inicio_linha)
+    {
+        return cima;
+    }
+
+    if(passo.linha > inicio_linha)
+    {
+        return baixo;
+    }
+
+    if(passo.coluna < inicio_coluna)
+    {
+        return esquerda;
+    }
+
+    if(passo.coluna > inicio_coluna)
+    {
+        return direita;
+    }
+
+
+    return fantasma->direcao_atual;
 }
 
 
 void mover_fantasma(struct entidade *fantasma)
 {
-    if(!pode_mover_fantasma(
-        fantasma,
-        fantasma->direcao_atual))
+    // A decisao do BFS acontece quando o fantasma
+    // esta aproximadamente no centro de uma celula
+    if(esta_no_centro_bloco(fantasma))
     {
-        escolher_nova_direcao(fantasma);
-    }
+        enum direcao nova_direcao =
+            buscar_direcao_bfs(fantasma);
 
-    else if(esta_no_centro_bloco(fantasma))
-    {
-        int quantidade =
-            contar_direcoes_livres(fantasma);
-
-        if(quantidade > 1)
+        if(pode_mover_fantasma(
+            fantasma,
+            nova_direcao))
         {
-            escolher_nova_direcao(fantasma);
+            fantasma->direcao_atual =
+                nova_direcao;
         }
     }
 
 
+    // Se a direcao atual estiver bloqueada,
+    // tenta calcular novamente o caminho
     if(!pode_mover_fantasma(
         fantasma,
         fantasma->direcao_atual))
     {
-        return;
+        enum direcao nova_direcao =
+            buscar_direcao_bfs(fantasma);
+
+        if(pode_mover_fantasma(
+            fantasma,
+            nova_direcao))
+        {
+            fantasma->direcao_atual =
+                nova_direcao;
+        }
+        else
+        {
+            return;
+        }
     }
 
 
@@ -344,55 +438,16 @@ void mover_fantasma(struct entidade *fantasma)
 
 void atualizar_fantasmas(void)
 {
-    static int contador_debug = 0;
-
     for(int i = 0; i < quantidade_entidades; i++)
     {
-        if(entidades_para_render[i].tipo != entidade_fantasma)
+        if(entidades_para_render[i].tipo !=
+           entidade_fantasma)
         {
             continue;
         }
 
-        mover_fantasma(&entidades_para_render[i]);
-
-
-        // Mostra a posicao no grid apenas algumas vezes
-        // para nao lotar o terminal
-        if(contador_debug >= FPS)
-        {
-            int linha_fantasma;
-            int coluna_fantasma;
-
-            int linha_pacman;
-            int coluna_pacman;
-
-            posicao_para_grid(
-                entidades_para_render[i].pos,
-                &linha_fantasma,
-                &coluna_fantasma
-            );
-
-            posicao_para_grid(
-                entidades_para_render[0].pos,
-                &linha_pacman,
-                &coluna_pacman
-            );
-
-            printf(
-                "\nFantasma: linha %d coluna %d | Pac-Man: linha %d coluna %d",
-                linha_fantasma,
-                coluna_fantasma,
-                linha_pacman,
-                coluna_pacman
-            );
-        }
-    }
-
-
-    contador_debug++;
-
-    if(contador_debug > FPS)
-    {
-        contador_debug = 0;
+        mover_fantasma(
+            &entidades_para_render[i]
+        );
     }
 }
