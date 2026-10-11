@@ -90,6 +90,27 @@ int pode_mover_fantasma(struct entidade *fantasma, enum direcao direcao)
 }
 
 
+enum direcao direcao_oposta(enum direcao direcao)
+{
+    switch(direcao)
+    {
+        case cima:
+            return baixo;
+
+        case baixo:
+            return cima;
+
+        case esquerda:
+            return direita;
+
+        case direita:
+            return esquerda;
+    }
+
+    return direcao;
+}
+
+
 void escolher_nova_direcao(struct entidade *fantasma)
 {
     enum direcao direcoes[4] =
@@ -100,14 +121,27 @@ void escolher_nova_direcao(struct entidade *fantasma)
         direita
     };
 
-    // Procura uma direcao livre
+    enum direcao oposta = direcao_oposta(fantasma->direcao_atual);
+
+    // Primeiro procura uma direcao livre sem voltar para tras
     for(int i = 0; i < 4; i++)
     {
+        if(direcoes[i] == oposta)
+        {
+            continue;
+        }
+
         if(pode_mover_fantasma(fantasma, direcoes[i]))
         {
             fantasma->direcao_atual = direcoes[i];
             return;
         }
+    }
+
+    // Se estiver em um beco sem saida, permite voltar
+    if(pode_mover_fantasma(fantasma, oposta))
+    {
+        fantasma->direcao_atual = oposta;
     }
 }
 
