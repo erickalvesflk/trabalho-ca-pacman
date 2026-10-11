@@ -30,7 +30,7 @@ void gerar_entidades()
     fantasma_vermelho.pos = (Vector2){0, 0};
     fantasma_vermelho.cor = RED;
     fantasma_vermelho.direcao_atual = esquerda;
-    fantasma_vermelho.velocidade = 1.4f;
+    fantasma_vermelho.velocidade = 1.0f;
 
     entidades_para_render[1] = fantasma_vermelho;
 
@@ -42,7 +42,7 @@ void gerar_entidades()
     fantasma_amarelo.pos = (Vector2){0, 0};
     fantasma_amarelo.cor = GOLD;
     fantasma_amarelo.direcao_atual = direita;
-    fantasma_amarelo.velocidade = 1.6f;
+    fantasma_amarelo.velocidade = 1.2f;
 
     entidades_para_render[2] = fantasma_amarelo;
 
@@ -54,7 +54,7 @@ void gerar_entidades()
     fantasma_verde.pos = (Vector2){0, 0};
     fantasma_verde.cor = GREEN;
     fantasma_verde.direcao_atual = cima;
-    fantasma_verde.velocidade = 1.5f;
+    fantasma_verde.velocidade = 1.4f;
 
     entidades_para_render[3] = fantasma_verde;
 
@@ -66,7 +66,7 @@ void gerar_entidades()
     fantasma_azul.pos = (Vector2){0, 0};
     fantasma_azul.cor = BLUE;
     fantasma_azul.direcao_atual = baixo;
-    fantasma_azul.velocidade = 1.5f;
+    fantasma_azul.velocidade = 1.6f;
 
     entidades_para_render[4] = fantasma_azul;
 
@@ -78,7 +78,7 @@ void gerar_entidades()
     fantasma_roxo.pos = (Vector2){0, 0};
     fantasma_roxo.cor = PURPLE;
     fantasma_roxo.direcao_atual = esquerda;
-    fantasma_roxo.velocidade = 1.5f;
+    fantasma_roxo.velocidade = 1.8f;
 
     entidades_para_render[5] = fantasma_roxo;
 }
