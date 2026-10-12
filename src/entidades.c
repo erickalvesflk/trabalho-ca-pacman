@@ -3,8 +3,33 @@
 
 struct entidade entidades_para_render[quantidade_entidades];
 
-void gerar_entidades()
+struct entidade gerar_fantasma(Color cor,enum direcao d, float velocidade)
 {
+    Image fantasma_sprite = LoadImage("src/sprite_fantasma.png");
+    const Color CorEsboco = {221, 33, 41};
+
+    struct entidade fantasma;
+    fantasma.tipo = entidade_fantasma;
+    fantasma.pos = (Vector2){0, 0};
+    fantasma.cor = cor;
+    fantasma.direcao_atual = d;
+    fantasma.velocidade = velocidade;
+
+    ImageColorReplace(&fantasma_sprite, RED, cor);
+    struct quadros_entidade quadros = {
+        LoadTextureFromImage(fantasma_sprite),
+        2
+    };
+    SetTextureFilter(quadros.textura, TEXTURE_FILTER_POINT);
+    fantasma.sprites = quadros;
+    
+    UnloadImage(fantasma_sprite);
+    return fantasma;
+}
+
+void gerar_entidades()
+{    
+
     for(int i = 0; i < quantidade_entidades; ++i)
     {
         entidades_para_render[i].tipo = entidade_vazia;
@@ -19,68 +44,23 @@ void gerar_entidades()
     pacman.cor = YELLOW;
     pacman.direcao_atual = direita;
     pacman.velocidade = 2.0f;
-
+    struct quadros_entidade quadros_pacman = {
+        LoadTexture("src/sprite_pacman.png"),
+        4
+    };
+    pacman.sprites = quadros_pacman;
     entidades_para_render[0] = pacman;
-
 
     // Fantasma vermelho
     // Perseguidor direto e mais lento
-    struct entidade fantasma_vermelho;
-
-    fantasma_vermelho.tipo = entidade_fantasma;
-    fantasma_vermelho.pos = (Vector2){0, 0};
-    fantasma_vermelho.cor = RED;
-    fantasma_vermelho.direcao_atual = esquerda;
-    fantasma_vermelho.velocidade = 1.4f;
-
-    entidades_para_render[1] = fantasma_vermelho;
-
-
+    entidades_para_render[1] = gerar_fantasma(RED, esquerda, 1.4f);
     // Fantasma amarelo
     // Mais rapido, mas possui visao ruim
-    struct entidade fantasma_amarelo;
-
-    fantasma_amarelo.tipo = entidade_fantasma;
-    fantasma_amarelo.pos = (Vector2){0, 0};
-    fantasma_amarelo.cor = GOLD;
-    fantasma_amarelo.direcao_atual = direita;
-    fantasma_amarelo.velocidade = 1.53f;
-
-    entidades_para_render[2] = fantasma_amarelo;
-
-
+    entidades_para_render[2] = gerar_fantasma(GOLD, direita, 1.53f);
     // Fantasma verde
-    struct entidade fantasma_verde;
-
-    fantasma_verde.tipo = entidade_fantasma;
-    fantasma_verde.pos = (Vector2){0, 0};
-    fantasma_verde.cor = GREEN;
-    fantasma_verde.direcao_atual = cima;
-    fantasma_verde.velocidade = 1.5f;
-
-    entidades_para_render[3] = fantasma_verde;
-
-
+    entidades_para_render[3] = gerar_fantasma(GREEN, cima, 1.5f);
     // Fantasma azul
-    struct entidade fantasma_azul;
-
-    fantasma_azul.tipo = entidade_fantasma;
-    fantasma_azul.pos = (Vector2){0, 0};
-    fantasma_azul.cor = BLUE;
-    fantasma_azul.direcao_atual = baixo;
-    fantasma_azul.velocidade = 1.5f;
-
-    entidades_para_render[4] = fantasma_azul;
-
-
+    entidades_para_render[4] = gerar_fantasma(BLUE, baixo, 1.5f);
     // Fantasma roxo
-    struct entidade fantasma_roxo;
-
-    fantasma_roxo.tipo = entidade_fantasma;
-    fantasma_roxo.pos = (Vector2){0, 0};
-    fantasma_roxo.cor = PURPLE;
-    fantasma_roxo.direcao_atual = esquerda;
-    fantasma_roxo.velocidade = 1.5f;
-
-    entidades_para_render[5] = fantasma_roxo;
+    entidades_para_render[5] = gerar_fantasma(PURPLE, esquerda, 1.5f);
 }

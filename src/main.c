@@ -15,7 +15,6 @@ int main()
         escolher_mapa();
         fechar_data_mapas();
 
-        gerar_entidades();
         motivo_retorno = iniciar_grafico();
 
     } while (!(motivo_retorno == retorno_sair || motivo_retorno == retorno_falha_mapa));
