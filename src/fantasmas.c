@@ -1,6 +1,6 @@
 #include "fantasmas.h"
 #include "grafico_jogo.h"
-
+#include "stdio.h"
 
 // Representa uma posicao dentro do grid
 struct posicao_grid
@@ -45,6 +45,22 @@ int linha_tem_tunel_fantasma(int linha)
     return 1;
 }
 
+int coluna_tem_tunel_fantasma(int coluna)
+{
+    if(coluna < 0 || coluna >= tamanho_grid)
+    {
+        return 0;
+    }
+
+    if(mapa_info.mapa[0][coluna].tipo == bloco_parede ||
+       mapa_info.mapa[tamanho_grid - 1][coluna].tipo == bloco_parede)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
 
 int posicao_livre(float x, float y)
 {
@@ -56,6 +72,10 @@ int posicao_livre(float x, float y)
 
     if(linha < 0 || linha >= tamanho_grid)
     {
+        if(coluna_tem_tunel_fantasma(coluna))
+        {
+            return 1;
+        }
         return 0;
     }
 
@@ -225,6 +245,27 @@ int ajustar_coluna_tunel(int linha, int coluna)
 
     return coluna;
 }
+// Converte uma linha que saiu pela lateral
+// para o outro lado quando existe tunel
+int ajustar_linha_tunel(int linha, int coluna)
+{
+    if(!coluna_tem_tunel_fantasma(coluna))
+    {
+        return linha;
+    }
+
+    if(linha < 0)
+    {
+        return tamanho_grid - 1;
+    }
+
+    if(linha >= tamanho_grid)
+    {
+        return 0;
+    }
+
+    return linha;
+}
 
 
 // Usa BFS para descobrir o primeiro passo
@@ -307,18 +348,17 @@ enum direcao buscar_direcao_bfs(
 
         for(int i = 0; i < 4; i++)
         {
-            int nova_linha =
-                atual.linha + movimento_linha[i];
+            int nova_linha = atual.linha + movimento_linha[i];
+            int nova_coluna = atual.coluna + movimento_coluna[i];
 
-            int nova_coluna =
-                atual.coluna + movimento_coluna[i];
-
-
-            nova_coluna =
-                ajustar_coluna_tunel(
+            nova_coluna = ajustar_coluna_tunel(
                     nova_linha,
                     nova_coluna
-                );
+            );
+            nova_linha = ajustar_linha_tunel(
+                    nova_linha,
+                    nova_coluna
+            );
 
 
             if(!celula_livre(
@@ -395,6 +435,18 @@ enum direcao buscar_direcao_bfs(
        passo.coluna == 0)
     {
         return direita;
+    }
+
+    if(inicio_linha == 0 &&
+       passo.linha == tamanho_grid - 1)
+    {
+        return cima;
+    }
+
+    if(inicio_linha == tamanho_grid - 1 &&
+       passo.linha == 0)
+    {
+        return baixo;
     }
 
 
@@ -491,6 +543,11 @@ void calcular_destino_a_frente(
 
         nova_coluna =
             ajustar_coluna_tunel(
+                nova_linha,
+                nova_coluna
+            );
+        nova_linha =
+            ajustar_linha_tunel(
                 nova_linha,
                 nova_coluna
             );
@@ -824,28 +881,40 @@ void verificar_tunel_fantasma(struct entidade *fantasma)
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
     int y_mapa = (altura_tela - tamanho_mapa) / 2;
 
-    int linha =
-        (int)((fantasma->pos.y - y_mapa) / tamanho_bloco);
+    int linha = (int)((fantasma->pos.y - y_mapa) / tamanho_bloco);
+    int coluna = (int)((fantasma->pos.x - x_mapa) / tamanho_bloco);
 
-    if(!linha_tem_tunel_fantasma(linha))
+    if(linha_tem_tunel_fantasma(linha))
     {
-        return;
+        float limite_esquerdo = x_mapa;
+        float limite_direito = x_mapa + tamanho_mapa;
+
+        if(fantasma->pos.x < limite_esquerdo)
+        {
+            fantasma->pos.x = limite_direito - 1;
+        }
+
+        else if(fantasma->pos.x > limite_direito)
+        {
+            fantasma->pos.x = limite_esquerdo + 1;
+        }
     }
 
-
-    float limite_esquerdo = x_mapa;
-    float limite_direito = x_mapa + tamanho_mapa;
-
-
-    if(fantasma->pos.x < limite_esquerdo)
+    if(coluna_tem_tunel_fantasma(coluna))
     {
-        fantasma->pos.x = limite_direito - 1;
+        float limite_topo = y_mapa;
+        float limite_base = y_mapa + tamanho_mapa;
+        
+        if(fantasma->pos.y < limite_topo)
+        {
+            fantasma->pos.y = limite_base - 1;
+        }
+        else if(fantasma->pos.y > limite_base)
+        {
+            fantasma->pos.y = limite_topo + 1;
+        }
     }
 
-    else if(fantasma->pos.x > limite_direito)
-    {
-        fantasma->pos.x = limite_esquerdo + 1;
-    }
 }
 
 
@@ -853,6 +922,7 @@ void mover_fantasma(
     struct entidade *fantasma,
     int indice)
 {
+    
     if(esta_no_centro_bloco(fantasma))
     {
         enum direcao nova_direcao =
