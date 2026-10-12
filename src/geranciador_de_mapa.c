@@ -15,9 +15,10 @@ FILE *arquivo_ptr = NULL;
 int mapa_escolhido = 0;
 struct Mapa mapa_info;
 
+
 int iniciar_data_mapas()
 {
-    arquivo_ptr = fopen(caminho,"r");
+    arquivo_ptr = fopen(caminho, "r");
 
     if(arquivo_ptr == NULL)
     {
@@ -41,6 +42,7 @@ int quantidade_de_mapas()
         return 0;
     }
 
+
     int quantidade = 0;
 
     // Move o ponteiro para o inicio
@@ -56,6 +58,7 @@ int quantidade_de_mapas()
             continue;
         }
     }
+
 
     return quantidade;
 }
@@ -77,17 +80,19 @@ int escolher_mapa()
 
     int quant = quantidade_de_mapas();
 
+
     // Define uma seed de acordo com o horario
     srand(time(NULL));
 
     int escolhido = rand() % quant + 1;
 
-    printf("%d", escolhido);
+
+    // Guarda qual mapa foi escolhido
+    mapa_info.indice_escolhido = escolhido;
 
 
     // Retorna o ponteiro ao inicio do arquivo
     fseek(arquivo_ptr, 0, SEEK_SET);
-
 
     char c = fgetc(arquivo_ptr);
 
@@ -152,8 +157,8 @@ int escolher_mapa()
 
             mapa_info.mapa[i][j] = b;
 
-
             ++j;
+
 
             if(j == tamanho_grid)
             {
