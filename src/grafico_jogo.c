@@ -3,7 +3,7 @@
 #include "pacman.h"
 
 // Cores do jogo
-const Color mapaFundo = { 0, 0, 0, 255 };  
+const Color mapaFundo = { 0, 0, 0, 255 };
 const Color corFundo = { 3, 15, 79, 255 };
 const Color corBordas = { 6, 35, 212, 255 };
 
@@ -315,8 +315,10 @@ void desenhar_display()
         WHITE
     );
 
+
+    // Mostra a quantidade atual de vidas
     DrawText(
-        "Vidas: ",
+        TextFormat("Vidas: %d", vidas_pacman),
         display_x + 10,
         display_y + 70,
         15,
@@ -397,6 +399,9 @@ void iniciar_grafico()
         {
             atualizar_pacman();
             atualizar_fantasmas();
+
+            // Verifica contato entre Pac-Man e fantasmas
+            atualizar_colisao_pacman();
         }
 
 
