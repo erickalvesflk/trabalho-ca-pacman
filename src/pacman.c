@@ -6,12 +6,21 @@
 enum direcao direcao_desejada = direita;
 
 
-// Pac-Man comeca a partida com tres vidas
+// Pac-Man comeca com tres vidas
 int vidas_pacman = 3;
 
 
-// Tempo restante de protecao depois de uma colisao
+// Indica se o jogador perdeu todas as vidas
+int game_over = 0;
+
+
+// Tempo de protecao depois de perder uma vida
 float tempo_protecao_pacman = 0.0f;
+
+
+// Posicoes de spawn definidas no grafico
+extern Vector2 pos_spawn_fantasmas;
+extern Vector2 pos_spawn_jogador;
 
 
 int linha_tem_tunel(int linha)
@@ -21,6 +30,8 @@ int linha_tem_tunel(int linha)
         return 0;
     }
 
+    // So existe tunel se as duas extremidades
+    // da linha nao forem paredes
     if(mapa_info.mapa[linha][0].tipo == bloco_parede ||
        mapa_info.mapa[linha][tamanho_grid - 1].tipo == bloco_parede)
     {
@@ -44,6 +55,8 @@ int posicao_livre_pacman(float x, float y)
         return 0;
     }
 
+    // Permite ultrapassar horizontalmente apenas
+    // quando estiver em uma linha de tunel
     if(coluna < 0 || coluna >= tamanho_grid)
     {
         if(linha_tem_tunel(linha))
@@ -190,7 +203,7 @@ void mover_pacman(struct entidade *pacman)
 }
 
 
-// Verifica se Pac-Man esta encostando
+// Verifica se o Pac-Man encostou
 // em algum dos fantasmas
 int pacman_colidiu_com_fantasma(void)
 {
@@ -205,6 +218,7 @@ int pacman_colidiu_com_fantasma(void)
     {
         struct entidade *fantasma =
             &entidades_para_render[i];
+
 
         if(fantasma->tipo != entidade_fantasma)
         {
@@ -242,9 +256,82 @@ int pacman_colidiu_com_fantasma(void)
 }
 
 
+// Devolve Pac-Man e fantasmas
+// aos pontos iniciais do mapa
+void reposicionar_entidades(void)
+{
+    for(int i = 0; i < quantidade_entidades; i++)
+    {
+        if(entidades_para_render[i].tipo == entidade_pacman)
+        {
+            entidades_para_render[i].pos =
+                pos_spawn_jogador;
+
+            entidades_para_render[i].direcao_atual =
+                direita;
+        }
+
+        else if(entidades_para_render[i].tipo ==
+                entidade_fantasma)
+        {
+            entidades_para_render[i].pos =
+                pos_spawn_fantasmas;
+
+
+            // Recupera as direcoes iniciais
+            // de cada fantasma
+            switch(i)
+            {
+                case 1:
+                    entidades_para_render[i].direcao_atual =
+                        esquerda;
+                    break;
+
+                case 2:
+                    entidades_para_render[i].direcao_atual =
+                        direita;
+                    break;
+
+                case 3:
+                    entidades_para_render[i].direcao_atual =
+                        cima;
+                    break;
+
+                case 4:
+                    entidades_para_render[i].direcao_atual =
+                        baixo;
+                    break;
+
+                case 5:
+                    entidades_para_render[i].direcao_atual =
+                        esquerda;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+
+    // Tambem reinicia a direcao desejada
+    // pelo jogador
+    direcao_desejada = direita;
+}
+
+
+// Controla perda de vida quando o jogador
+// encosta em algum fantasma
 void atualizar_colisao_pacman(void)
 {
-    // Reduz o tempo de protecao
+    if(game_over)
+    {
+        return;
+    }
+
+
+    // Durante a protecao nenhuma nova vida
+    // pode ser perdida
     if(tempo_protecao_pacman > 0.0f)
     {
         tempo_protecao_pacman -= GetFrameTime();
@@ -262,15 +349,23 @@ void atualizar_colisao_pacman(void)
     {
         vidas_pacman--;
 
-        // Um segundo sem poder perder outra vida
-        tempo_protecao_pacman = 1.0f;
 
-
-        // Protecao para nao ficar com vidas negativas
-        if(vidas_pacman < 0)
+        if(vidas_pacman <= 0)
         {
             vidas_pacman = 0;
+            game_over = 1;
+
+            return;
         }
+
+
+        // Volta todos para o inicio
+        reposicionar_entidades();
+
+
+        // Protecao de um segundo depois
+        // do respawn
+        tempo_protecao_pacman = 1.0f;
     }
 }
 
@@ -280,7 +375,14 @@ void atualizar_pacman(void)
     struct entidade *pacman =
         &entidades_para_render[0];
 
+
     if(pacman->tipo != entidade_pacman)
+    {
+        return;
+    }
+
+
+    if(game_over)
     {
         return;
     }
