@@ -14,6 +14,10 @@ int vidas_pacman = 3;
 int game_over = 0;
 
 
+// Indica se todos os pontos foram coletados
+int jogador_venceu = 0;
+
+
 // Tempo de protecao depois de perder uma vida
 float tempo_protecao_pacman = 0.0f;
 
@@ -163,6 +167,51 @@ void verificar_tunel_pacman(struct entidade *pacman)
 }
 
 
+// Verifica se o Pac-Man passou por uma celula
+// que ainda possui um ponto
+void coletar_ponto_pacman(struct entidade *pacman)
+{
+    int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
+    int y_mapa = (altura_tela - tamanho_mapa) / 2;
+
+    int coluna =
+        (int)((pacman->pos.x - x_mapa) / tamanho_bloco);
+
+    int linha =
+        (int)((pacman->pos.y - y_mapa) / tamanho_bloco);
+
+
+    if(linha < 0 || linha >= tamanho_grid ||
+       coluna < 0 || coluna >= tamanho_grid)
+    {
+        return;
+    }
+
+
+    if(mapa_info.mapa[linha][coluna].tipo ==
+       bloco_area_com_pontos)
+    {
+        // A celula deixa de possuir ponto
+        mapa_info.mapa[linha][coluna].tipo =
+            area_vazia;
+
+
+        if(mapa_info.total_pontos > 0)
+        {
+            mapa_info.total_pontos--;
+        }
+
+
+        // Se nao restou nenhum ponto,
+        // o jogador venceu
+        if(mapa_info.total_pontos == 0)
+        {
+            jogador_venceu = 1;
+        }
+    }
+}
+
+
 void mover_pacman(struct entidade *pacman)
 {
     if(pode_mover_pacman(
@@ -200,6 +249,10 @@ void mover_pacman(struct entidade *pacman)
     }
 
     verificar_tunel_pacman(pacman);
+
+    // Depois de se mover, verifica
+    // se existe um ponto na celula atual
+    coletar_ponto_pacman(pacman);
 }
 
 
@@ -314,8 +367,6 @@ void reposicionar_entidades(void)
     }
 
 
-    // Tambem reinicia a direcao desejada
-    // pelo jogador
     direcao_desejada = direita;
 }
 
@@ -324,14 +375,12 @@ void reposicionar_entidades(void)
 // encosta em algum fantasma
 void atualizar_colisao_pacman(void)
 {
-    if(game_over)
+    if(game_over || jogador_venceu)
     {
         return;
     }
 
 
-    // Durante a protecao nenhuma nova vida
-    // pode ser perdida
     if(tempo_protecao_pacman > 0.0f)
     {
         tempo_protecao_pacman -= GetFrameTime();
@@ -359,12 +408,11 @@ void atualizar_colisao_pacman(void)
         }
 
 
-        // Volta todos para o inicio
         reposicionar_entidades();
 
 
-        // Protecao de um segundo depois
-        // do respawn
+        // Um segundo de protecao
+        // depois do respawn
         tempo_protecao_pacman = 1.0f;
     }
 }
@@ -382,7 +430,7 @@ void atualizar_pacman(void)
     }
 
 
-    if(game_over)
+    if(game_over || jogador_venceu)
     {
         return;
     }
