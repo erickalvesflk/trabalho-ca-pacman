@@ -84,6 +84,7 @@ void desenhar_parede(int i, int j, int x, int y)
     }
 }
 
+
 void desenhar_fantasma(struct entidade ent)
 {
     if(ent.tipo != entidade_fantasma)
@@ -101,6 +102,7 @@ void desenhar_fantasma(struct entidade ent)
         ent.cor
     );
 }
+
 
 void desenhar_pacman(struct entidade ent)
 {
@@ -225,11 +227,13 @@ void desenhar_mapa()
         {
             if(entidades_para_render[i].tipo == entidade_fantasma)
             {
-                entidades_para_render[i].pos = pos_spawn_fantasmas;
+                entidades_para_render[i].pos =
+                    pos_spawn_fantasmas;
             }
             else if(entidades_para_render[i].tipo == entidade_pacman)
             {
-                entidades_para_render[i].pos = pos_spawn_jogador;
+                entidades_para_render[i].pos =
+                    pos_spawn_jogador;
             }
         }
 
@@ -315,8 +319,6 @@ void desenhar_display()
         WHITE
     );
 
-
-    // Mostra a quantidade atual de vidas
     DrawText(
         TextFormat("Vidas: %d", vidas_pacman),
         display_x + 10,
@@ -360,6 +362,59 @@ void desenhar_display()
 }
 
 
+// Tela mostrada quando o jogador
+// perde todas as vidas
+void desenhar_game_over()
+{
+    int largura_caixa = 300;
+    int altura_caixa = 100;
+
+    int x =
+        (largura_tela - largura_caixa) / 2;
+
+    int y =
+        (altura_tela - altura_caixa) / 2;
+
+
+    DrawRectangle(
+        x,
+        y,
+        largura_caixa,
+        altura_caixa,
+        mapaFundo
+    );
+
+
+    DrawRectangleLines(
+        x,
+        y,
+        largura_caixa,
+        altura_caixa,
+        corBordas
+    );
+
+
+    const char *texto = "GAME OVER";
+
+    int tamanho_fonte = 35;
+
+    int largura_texto =
+        MeasureText(
+            texto,
+            tamanho_fonte
+        );
+
+
+    DrawText(
+        texto,
+        x + (largura_caixa - largura_texto) / 2,
+        y + 30,
+        tamanho_fonte,
+        RED
+    );
+}
+
+
 void iniciar_grafico()
 {
     InitWindow(
@@ -394,13 +449,13 @@ void iniciar_grafico()
         }
 
 
-        // So movimenta as entidades depois que receberam o spawn
-        if(entidades_inicializadas)
+        // So movimenta as entidades depois que
+        // receberam o spawn e enquanto o jogo continua
+        if(entidades_inicializadas &&
+           !game_over)
         {
             atualizar_pacman();
             atualizar_fantasmas();
-
-            // Verifica contato entre Pac-Man e fantasmas
             atualizar_colisao_pacman();
         }
 
@@ -435,6 +490,12 @@ void iniciar_grafico()
 
             desenhar_mapa();
             desenhar_display();
+
+
+            if(game_over)
+            {
+                desenhar_game_over();
+            }
 
         EndDrawing();
     }
