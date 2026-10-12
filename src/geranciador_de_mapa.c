@@ -83,7 +83,7 @@ int escolher_mapa()
     srand(time(NULL));
 
     int escolhido = rand() % quant + 1;
-
+    escolhido = 1;
     // Guarda qual mapa foi escolhido para mostrar no display
     mapa_info.indice_escolhido = escolhido;
 
