@@ -14,6 +14,13 @@ int game_over = 0;
 int jogador_venceu = 0;
 // Tempo de protecao depois de perder uma vida
 float tempo_protecao_pacman = 0.0f;
+// Indica se o jogo está congelado
+int congelado = 0;
+
+// Indica se o frame é o primeiro a estar congelado
+int primeiro_frame_congelado = 0;
+
+float tempo_congelado = 0.0f;
 
 void inicializar_pacman()
 {
@@ -428,8 +435,7 @@ void atualizar_colisao_pacman(void)
 
     if(pacman_colidiu_com_fantasma())
     {
-        vidas_pacman--;
-
+        if(!congelado){vidas_pacman--;}
 
         if(vidas_pacman <= 0)
         {
@@ -439,13 +445,31 @@ void atualizar_colisao_pacman(void)
             return;
         }
 
+        if(!congelado)
+        {
+            congelado = 1;
+            primeiro_frame_congelado = 1;
+            tempo_congelado = 0.0;
+        }
+        else
+        {
+            primeiro_frame_congelado = 0;
+        }
 
-        reposicionar_entidades();
+        if (tempo_congelado >= 1.0f)
+        {
+            congelado = 0;
+            reposicionar_entidades();
+            
+            // Um segundo de protecao
+            // depois do respawn
+            tempo_protecao_pacman = 1.0f;
+        }
+        else
+        {
+            tempo_congelado+= GetFrameTime();
+        }
 
-
-        // Um segundo de protecao
-        // depois do respawn
-        tempo_protecao_pacman = 1.0f;
     }
 }
 
@@ -455,6 +479,10 @@ void atualizar_pacman(void)
     struct entidade *pacman =
         &entidades_para_render[0];
 
+    if(congelado)
+    {
+        return;
+    }
 
     if(pacman->tipo != entidade_pacman)
     {
