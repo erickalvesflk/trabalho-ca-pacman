@@ -220,7 +220,6 @@ void desenhar_mapa()
     }
 
 
-    // Coloca as entidades no spawn apenas na primeira vez
     if(!entidades_inicializadas)
     {
         for(int i = 0; i < quantidade_entidades; ++i)
@@ -241,7 +240,6 @@ void desenhar_mapa()
     }
 
 
-    // Desenha as entidades
     for(int i = 0; i < quantidade_entidades; ++i)
     {
         struct entidade ent = entidades_para_render[i];
@@ -312,7 +310,10 @@ void desenhar_display()
     );
 
     DrawText(
-        "Pontos restantes: ",
+        TextFormat(
+            "Pontos restantes: %d",
+            mapa_info.total_pontos
+        ),
         display_x + 10,
         display_y + 40,
         15,
@@ -384,7 +385,6 @@ void desenhar_game_over()
         mapaFundo
     );
 
-
     DrawRectangleLines(
         x,
         y,
@@ -411,6 +411,58 @@ void desenhar_game_over()
         y + 30,
         tamanho_fonte,
         RED
+    );
+}
+
+
+// Tela mostrada quando todos
+// os pontos foram coletados
+void desenhar_vitoria()
+{
+    int largura_caixa = 300;
+    int altura_caixa = 100;
+
+    int x =
+        (largura_tela - largura_caixa) / 2;
+
+    int y =
+        (altura_tela - altura_caixa) / 2;
+
+
+    DrawRectangle(
+        x,
+        y,
+        largura_caixa,
+        altura_caixa,
+        mapaFundo
+    );
+
+    DrawRectangleLines(
+        x,
+        y,
+        largura_caixa,
+        altura_caixa,
+        corBordas
+    );
+
+
+    const char *texto = "VOCE VENCEU!";
+
+    int tamanho_fonte = 30;
+
+    int largura_texto =
+        MeasureText(
+            texto,
+            tamanho_fonte
+        );
+
+
+    DrawText(
+        texto,
+        x + (largura_caixa - largura_texto) / 2,
+        y + 32,
+        tamanho_fonte,
+        YELLOW
     );
 }
 
@@ -449,10 +501,11 @@ void iniciar_grafico()
         }
 
 
-        // So movimenta as entidades depois que
-        // receberam o spawn e enquanto o jogo continua
+        // So atualiza o jogo enquanto
+        // a partida ainda estiver acontecendo
         if(entidades_inicializadas &&
-           !game_over)
+           !game_over &&
+           !jogador_venceu)
         {
             atualizar_pacman();
             atualizar_fantasmas();
@@ -495,6 +548,11 @@ void iniciar_grafico()
             if(game_over)
             {
                 desenhar_game_over();
+            }
+
+            if(jogador_venceu)
+            {
+                desenhar_vitoria();
             }
 
         EndDrawing();
