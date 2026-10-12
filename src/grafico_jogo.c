@@ -3,28 +3,70 @@
 #include "pacman.h"
 
 // Cores do jogo
-const Color mapaFundo = { 0, 0, 0, 255 };
-const Color corFundo = { 3, 15, 79, 255 };
-const Color corBordas = { 6, 35, 212, 255 };
+const Color mapaFundo = {0, 0, 0, 255};
+const Color corFundo1 = {3, 15, 79, 255};
+const Color corFundo2 = {2, 24, 184, 255};
+const Color corBordas = {6, 35, 212, 255};
+const Color corDisplay = {12, 40, 250, 255};
+
+// Animacao dos pontos
+float multi_alpha = 1.0f;
+int sentido_alpha = -1;
+
+// Posicoes de spawn
+Vector2 pos_spawn_fantasmas = {0, 0};
+Vector2 pos_spawn_jogador = {0, 0};
+
+// Controle da inicializacao das entidades
+int entidades_inicializadas = 0;
+
+// Guarda a quantidade original de pontos do mapa
+int total_pontos_inicial = 0;
+
 
 void desenhar_parede(int i, int j, int x, int y)
 {
-    if(j == 0)
-    {
-        Vector2 inicio_borda = {x, y};
-        Vector2 fim_borda = {x, y + tamanho_bloco};
+    Vector2 inicio_borda;
+    Vector2 fim_borda;
 
-        DrawLineEx(inicio_borda, fim_borda, espessura_parede, corBordas);
+    // Bordas externas do mapa
+    if(j == 0 || j == tamanho_grid - 1)
+    {
+        int reajuste_x = (j != 0) * tamanho_bloco;
+
+        inicio_borda.x = x + reajuste_x;
+        inicio_borda.y = y;
+
+        fim_borda.x = x + reajuste_x;
+        fim_borda.y = y + tamanho_bloco;
+
+        DrawLineEx(
+            inicio_borda,
+            fim_borda,
+            espessura_parede,
+            corBordas
+        );
     }
 
-    if(i == 0)
+    if(i == 0 || i == tamanho_grid - 1)
     {
-        Vector2 inicio_borda = {x, y};
-        Vector2 fim_borda = {x + tamanho_bloco, y};
+        int reajuste_y = (i != 0) * tamanho_bloco;
 
-        DrawLineEx(inicio_borda, fim_borda, espessura_parede, corBordas);
+        inicio_borda.x = x;
+        inicio_borda.y = y + reajuste_y;
+
+        fim_borda.x = x + tamanho_bloco;
+        fim_borda.y = y + reajuste_y;
+
+        DrawLineEx(
+            inicio_borda,
+            fim_borda,
+            espessura_parede,
+            corBordas
+        );
     }
 
+    // Bordas entre parede e espaco livre
     for(int dif1 = 0; dif1 <= 1; ++dif1)
     {
         for(int dif2 = 0; dif2 <= 1; ++dif2)
@@ -42,8 +84,10 @@ void desenhar_parede(int i, int j, int x, int y)
                 vizinho_j += v;
             }
 
-            if(vizinho_i >= 0 && vizinho_i < tamanho_grid &&
-               vizinho_j >= 0 && vizinho_j < tamanho_grid)
+            if(vizinho_i >= 0 &&
+               vizinho_i < tamanho_grid &&
+               vizinho_j >= 0 &&
+               vizinho_j < tamanho_grid)
             {
                 enum tipo_bloco tipo_vizinho =
                     mapa_info.mapa[vizinho_i][vizinho_j].tipo;
@@ -53,20 +97,20 @@ void desenhar_parede(int i, int j, int x, int y)
                     continue;
                 }
 
-                Vector2 inicio_borda;
-                Vector2 fim_borda;
-
                 if(dif1 == 0)
                 {
                     inicio_borda.x = x;
-                    inicio_borda.y = y + (dif2 * tamanho_bloco);
+                    inicio_borda.y =
+                        y + (dif2 * tamanho_bloco);
 
                     fim_borda.x = x + tamanho_bloco;
                     fim_borda.y = inicio_borda.y;
                 }
                 else
                 {
-                    inicio_borda.x = x + (dif2 * tamanho_bloco);
+                    inicio_borda.x =
+                        x + (dif2 * tamanho_bloco);
+
                     inicio_borda.y = y;
 
                     fim_borda.x = inicio_borda.x;
@@ -92,13 +136,13 @@ void desenhar_fantasma(struct entidade ent)
         return;
     }
 
-    int t = (int)(tamanho_bloco / 1.5);
+    int tamanho = (int)(tamanho_bloco / 1.5f);
 
     DrawRectangle(
-        ent.pos.x - t / 2,
-        ent.pos.y - t / 2,
-        t,
-        t,
+        (int)ent.pos.x - tamanho / 2,
+        (int)ent.pos.y - tamanho / 2,
+        tamanho,
+        tamanho,
         ent.cor
     );
 }
@@ -111,32 +155,24 @@ void desenhar_pacman(struct entidade ent)
         return;
     }
 
-    int t = (int)(tamanho_bloco / 2.5);
+    int raio = (int)(tamanho_bloco / 2.5f);
 
     DrawCircle(
-        ent.pos.x,
-        ent.pos.y,
-        t,
+        (int)ent.pos.x,
+        (int)ent.pos.y,
+        raio,
         ent.cor
     );
 }
 
 
-// Variaveis para a animacao dos pontos
-float multi_alpha = 1.0;
-int sentido_alpha = -1;
-
-Vector2 pos_spawn_fantasmas = {0, 0};
-Vector2 pos_spawn_jogador = {0, 0};
-
-// Indica se as entidades ja foram colocadas no spawn
-int entidades_inicializadas = 0;
-
-
 void desenhar_mapa()
 {
-    int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
-    int y_mapa = (altura_tela - tamanho_mapa) / 2;
+    int x_mapa =
+        (largura_tela - tamanho_mapa) - distancia_mapa;
+
+    int y_mapa =
+        (altura_tela - tamanho_mapa) / 2;
 
     DrawRectangle(
         x_mapa,
@@ -149,7 +185,6 @@ void desenhar_mapa()
     int eixo_x = x_mapa;
     int eixo_y = y_mapa;
 
-    // Desenha os blocos do mapa
     for(int i = 0; i < tamanho_grid; ++i)
     {
         for(int j = 0; j < tamanho_grid; ++j)
@@ -157,7 +192,12 @@ void desenhar_mapa()
             switch(mapa_info.mapa[i][j].tipo)
             {
                 case bloco_parede:
-                    desenhar_parede(i, j, eixo_x, eixo_y);
+                    desenhar_parede(
+                        i,
+                        j,
+                        eixo_x,
+                        eixo_y
+                    );
                     break;
 
                 case bloco_area_com_pontos:
@@ -167,7 +207,7 @@ void desenhar_mapa()
                         255,
                         255,
                         255,
-                        (int)(255 * multi_alpha)
+                        (unsigned char)(255 * multi_alpha)
                     };
 
                     DrawCircle(
@@ -182,8 +222,11 @@ void desenhar_mapa()
 
                 case bloco_s_jogador:
                 {
-                    int xj = eixo_x + tamanho_bloco / 2;
-                    int yj = eixo_y + tamanho_bloco / 2;
+                    int xj =
+                        eixo_x + tamanho_bloco / 2;
+
+                    int yj =
+                        eixo_y + tamanho_bloco / 2;
 
                     if(pos_spawn_jogador.x == 0)
                     {
@@ -196,8 +239,11 @@ void desenhar_mapa()
 
                 case bloco_s_fantasmas:
                 {
-                    int xf = eixo_x + tamanho_bloco / 2;
-                    int yf = eixo_y + tamanho_bloco / 2;
+                    int xf =
+                        eixo_x + tamanho_bloco / 2;
+
+                    int yf =
+                        eixo_y + tamanho_bloco / 2;
 
                     if(pos_spawn_fantasmas.x == 0)
                     {
@@ -219,43 +265,48 @@ void desenhar_mapa()
         eixo_x = x_mapa;
     }
 
-
+    // Coloca Pac-Man e fantasmas nos spawns
+    // somente na primeira inicializacao
     if(!entidades_inicializadas)
     {
         for(int i = 0; i < quantidade_entidades; ++i)
         {
-            if(entidades_para_render[i].tipo == entidade_fantasma)
+            if(entidades_para_render[i].tipo ==
+               entidade_fantasma)
             {
                 entidades_para_render[i].pos =
                     pos_spawn_fantasmas;
             }
-            else if(entidades_para_render[i].tipo == entidade_pacman)
+            else if(entidades_para_render[i].tipo ==
+                    entidade_pacman)
             {
                 entidades_para_render[i].pos =
                     pos_spawn_jogador;
             }
         }
 
+        total_pontos_inicial =
+            mapa_info.total_pontos;
+
         entidades_inicializadas = 1;
     }
+}
 
 
+void desenhar_entidades()
+{
     for(int i = 0; i < quantidade_entidades; ++i)
     {
-        struct entidade ent = entidades_para_render[i];
+        struct entidade ent =
+            entidades_para_render[i];
 
-        switch(ent.tipo)
+        if(ent.tipo == entidade_fantasma)
         {
-            case entidade_fantasma:
-                desenhar_fantasma(ent);
-                break;
-
-            case entidade_pacman:
-                desenhar_pacman(ent);
-                break;
-
-            default:
-                break;
+            desenhar_fantasma(ent);
+        }
+        else if(ent.tipo == entidade_pacman)
+        {
+            desenhar_pacman(ent);
         }
     }
 }
@@ -263,108 +314,117 @@ void desenhar_mapa()
 
 void desenhar_display()
 {
-    int display_x = distancia_mapa / 2;
-    int display_y = 60;
+    int display_x = distancia_mapa;
+    int display_y = 55;
+
+    int tamanho_x = tamanho_display;
+    int tamanho_y = tamanho_display;
+
+    int reajuste_x = 10;
+    int reajuste_y = 15;
 
     DrawRectangle(
         display_x,
         display_y,
-        tamanho_display,
-        tamanho_display - 10,
+        tamanho_x,
+        tamanho_y,
         mapaFundo
     );
 
-    Vector2 i, f;
-
-    i.x = display_x;
-    i.y = display_y;
-    f.x = display_x + tamanho_display;
-    f.y = display_y;
-    DrawLineEx(i, f, 5, corBordas);
-
-    i.x = display_x;
-    i.y = display_y + tamanho_display - 10;
-    f.x = display_x + tamanho_display;
-    f.y = display_y + tamanho_display - 10;
-    DrawLineEx(i, f, 5, corBordas);
-
-    i.x = display_x;
-    i.y = display_y;
-    f.x = display_x;
-    f.y = display_y + tamanho_display - 10;
-    DrawLineEx(i, f, 5, corBordas);
-
-    i.x = display_x + tamanho_display;
-    i.y = display_y;
-    f.x = display_x + tamanho_display;
-    f.y = display_y + tamanho_display - 10;
-    DrawLineEx(i, f, 5, corBordas);
-
+    DrawRectangleLinesEx(
+        (Rectangle)
+        {
+            display_x,
+            display_y,
+            tamanho_x,
+            tamanho_y
+        },
+        5,
+        corDisplay
+    );
 
     DrawText(
-        "Info Jogador ",
-        display_x + 10,
-        display_y + 15,
+        "Info Jogador",
+        display_x + reajuste_x,
+        display_y + reajuste_y,
         15,
-        corBordas
+        corDisplay
     );
+
+    reajuste_y += 25;
 
     DrawText(
         TextFormat(
             "Pontos restantes: %d",
             mapa_info.total_pontos
         ),
-        display_x + 10,
-        display_y + 40,
+        display_x + reajuste_x,
+        display_y + reajuste_y,
         15,
         WHITE
     );
 
+    reajuste_y += 30;
+
     DrawText(
-        TextFormat("Vidas: %d", vidas_pacman),
-        display_x + 10,
-        display_y + 70,
+        TextFormat(
+            "Vidas: %d",
+            vidas_pacman
+        ),
+        display_x + reajuste_x,
+        display_y + reajuste_y,
         15,
         WHITE
     );
 
+    reajuste_y += 35;
 
-    i.x = display_x + 10;
-    i.y = display_y + 105;
-    f.x = display_x + tamanho_display - 10;
-    f.y = display_y + 105;
-
-    DrawLineEx(i, f, 5, corBordas);
-
-
-    DrawText(
-        "Info Mapa ",
-        display_x + 10,
-        display_y + 120,
-        15,
-        corBordas
+    DrawRectangle(
+        display_x + reajuste_x,
+        display_y + reajuste_y,
+        tamanho_display - 20,
+        3,
+        corDisplay
     );
 
+    reajuste_y += 15;
+
     DrawText(
-        "Nome do Mapa: ",
-        display_x + 10,
-        display_y + 145,
+        "Info Mapa",
+        display_x + reajuste_x,
+        display_y + reajuste_y,
+        15,
+        corDisplay
+    );
+
+    reajuste_y += 25;
+
+    DrawText(
+        TextFormat(
+            "Indice do Mapa: %d",
+            mapa_info.indice_escolhido
+        ),
+        display_x + reajuste_x,
+        display_y + reajuste_y,
         15,
         WHITE
     );
 
+    reajuste_y += 30;
+
     DrawText(
-        "Total de Pontos: ",
-        display_x + 10,
-        display_y + 175,
+        TextFormat(
+            "Total de Pontos: %d",
+            total_pontos_inicial
+        ),
+        display_x + reajuste_x,
+        display_y + reajuste_y,
         15,
         WHITE
     );
 }
 
 
-// Tela mostrada quando o jogador
-// perde todas as vidas
 void desenhar_game_over()
 {
     int largura_caixa = 300;
@@ -376,7 +436,6 @@ void desenhar_game_over()
     int y =
         (altura_tela - altura_caixa) / 2;
 
-
     DrawRectangle(
         x,
         y,
@@ -393,17 +452,11 @@ void desenhar_game_over()
         corBordas
     );
 
-
     const char *texto = "GAME OVER";
-
     int tamanho_fonte = 35;
 
     int largura_texto =
-        MeasureText(
-            texto,
-            tamanho_fonte
-        );
-
+        MeasureText(texto, tamanho_fonte);
 
     DrawText(
         texto,
@@ -415,8 +468,6 @@ void desenhar_game_over()
 }
 
 
-// Tela mostrada quando todos
-// os pontos foram coletados
 void desenhar_vitoria()
 {
     int largura_caixa = 300;
@@ -427,7 +478,6 @@ void desenhar_vitoria()
 
     int y =
         (altura_tela - altura_caixa) / 2;
-
 
     DrawRectangle(
         x,
@@ -445,17 +495,11 @@ void desenhar_vitoria()
         corBordas
     );
 
-
     const char *texto = "VOCE VENCEU!";
-
     int tamanho_fonte = 30;
 
     int largura_texto =
-        MeasureText(
-            texto,
-            tamanho_fonte
-        );
-
+        MeasureText(texto, tamanho_fonte);
 
     DrawText(
         texto,
@@ -467,8 +511,17 @@ void desenhar_vitoria()
 }
 
 
-void iniciar_grafico()
+enum grafico_jogo iniciar_grafico()
 {
+    pos_spawn_fantasmas = (Vector2){0, 0};
+    pos_spawn_jogador = (Vector2){0, 0};
+
+    entidades_inicializadas = 0;
+    total_pontos_inicial = 0;
+
+    multi_alpha = 1.0f;
+    sentido_alpha = -1;
+
     InitWindow(
         largura_tela,
         altura_tela,
@@ -480,7 +533,8 @@ void iniciar_grafico()
     while(!WindowShouldClose())
     {
         // Animacao dos pontos
-        multi_alpha += (1.0 / FPS) * sentido_alpha;
+        multi_alpha +=
+            (1.0f / FPS) * sentido_alpha;
 
         if(multi_alpha < 0.375f)
         {
@@ -494,15 +548,14 @@ void iniciar_grafico()
             sentido_alpha = -1;
         }
 
-
         if(!mapa_escolhido)
         {
-            break;
+            CloseWindow();
+            return retorno_falha_mapa;
         }
 
-
-        // So atualiza o jogo enquanto
-        // a partida ainda estiver acontecendo
+        // Atualiza o jogo somente enquanto
+        // a partida estiver ativa
         if(entidades_inicializadas &&
            !game_over &&
            !jogador_venceu)
@@ -512,51 +565,53 @@ void iniciar_grafico()
             atualizar_colisao_pacman();
         }
 
-
         BeginDrawing();
 
-            ClearBackground(corFundo);
+        ClearBackground(corFundo1);
 
-            DrawText(
-                "Pacman",
-                20,
-                10,
-                40,
-                WHITE
-            );
+        DrawRectangleGradientH(
+            0,
+            0,
+            largura_tela,
+            altura_tela,
+            corFundo1,
+            corFundo2
+        );
 
-            DrawText(
-                "Construcao de Algoritmos",
-                20 + MeasureText("Pacman", 40) + 10,
-                30,
-                15,
-                WHITE
-            );
+        DrawText(
+            "Pacman",
+            20,
+            20,
+            40,
+            WHITE
+        );
 
-            DrawText(
-                "Erick Alves e Kauã Soares",
-                20,
-                altura_tela - 30,
-                15,
-                WHITE
-            );
+        DrawText(
+            "Construcao de Algoritmos",
+            20 + MeasureText("Pacman", 40) + 10,
+            30,
+            15,
+            WHITE
+        );
 
-            desenhar_mapa();
-            desenhar_display();
+        desenhar_mapa();
+        desenhar_display();
+        desenhar_entidades();
 
+        if(game_over)
+        {
+            desenhar_game_over();
+        }
 
-            if(game_over)
-            {
-                desenhar_game_over();
-            }
-
-            if(jogador_venceu)
-            {
-                desenhar_vitoria();
-            }
+        if(jogador_venceu)
+        {
+            desenhar_vitoria();
+        }
 
         EndDrawing();
     }
 
     CloseWindow();
+
+    return retorno_sair;
 }
