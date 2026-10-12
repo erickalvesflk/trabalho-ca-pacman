@@ -5,7 +5,7 @@
 // Cores do jogo
 const Color mapaFundo = {0, 0, 0, 255};
 const Color corFundo1 = {3, 15, 79, 255};
-const Color corFundo2 = {2, 24, 184, 255};
+const Color corFundo2 = {2, 10, 55, 255};
 const Color corBordas = {6, 35, 212, 255};
 const Color corDisplay = {12, 40, 250, 255};
 
@@ -532,13 +532,14 @@ void desenhar_game_over()
 
     const char *legenda = "Aperte ENTER para recomeçar!";
     int largura_legenda = MeasureText(legenda, tamanho_fonte/2);
+    Color cor_legenda = {255,255,255,255*multi_alpha};
 
     DrawText(
         legenda,
         x + (largura_caixa - largura_legenda) / 2,
         y + 32+tamanho_fonte+4,
         tamanho_fonte/2,
-        WHITE
+        cor_legenda
     );
 }
 
@@ -584,13 +585,13 @@ void desenhar_vitoria()
 
     const char *legenda = "Aperte ENTER para recomeçar!";
     int largura_legenda = MeasureText(legenda, tamanho_fonte/2);
-
+    Color cor_legenda = {255,255,255,255*multi_alpha};
     DrawText(
         legenda,
         x + (largura_caixa - largura_legenda) / 2,
         y + 32+tamanho_fonte+4,
         tamanho_fonte/2,
-        WHITE
+        cor_legenda
     );
 }
 
@@ -662,7 +663,7 @@ enum grafico_jogo iniciar_grafico()
         DrawText(
             "Pacman",
             20,
-            20,
+            10,
             40,
             WHITE
         );
