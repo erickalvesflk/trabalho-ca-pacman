@@ -445,6 +445,68 @@ enum personalidade_fantasma obter_personalidade(
 }
 
 
+// Escolhe uma direcao diferente da ideal
+// para representar o erro de visao do amarelo
+enum direcao erro_fantasma_amarelo(
+    struct entidade *fantasma,
+    enum direcao direcao_ideal)
+{
+    enum direcao direcoes[4] =
+    {
+        cima,
+        baixo,
+        esquerda,
+        direita
+    };
+
+    enum direcao opcoes[4];
+    int quantidade_opcoes = 0;
+
+
+    for(int i = 0; i < 4; i++)
+    {
+        enum direcao direcao_teste =
+            direcoes[i];
+
+
+        // Nao escolhe a direcao perfeita
+        if(direcao_teste == direcao_ideal)
+        {
+            continue;
+        }
+
+
+        if(pode_mover_fantasma(
+            fantasma,
+            direcao_teste))
+        {
+            opcoes[quantidade_opcoes] =
+                direcao_teste;
+
+            quantidade_opcoes++;
+        }
+    }
+
+
+    // Se nao houver outra opcao segura,
+    // continua seguindo o caminho correto
+    if(quantidade_opcoes == 0)
+    {
+        return direcao_ideal;
+    }
+
+
+    int escolha =
+        GetRandomValue(
+            0,
+            quantidade_opcoes - 1
+        );
+
+
+    return opcoes[escolha];
+}
+
+
 // Decide qual direcao cada personalidade deseja seguir
 enum direcao decidir_direcao_fantasma(
     struct entidade *fantasma,
@@ -470,7 +532,7 @@ enum direcao decidir_direcao_fantasma(
     switch(personalidade)
     {
         case perseguidor:
-
+        {
             // Vermelho:
             // persegue diretamente a posicao
             // atual do Pac-Man
@@ -479,47 +541,112 @@ enum direcao decidir_direcao_fantasma(
                 pacman_linha,
                 pacman_coluna
             );
+        }
 
 
         case miope:
+        {
+            // Amarelo:
+            // segue o Pac-Man normalmente,
+            // mas pode errar quando esta perto
 
-            // O comportamento proprio do amarelo
-            // sera implementado na proxima etapa
-            return buscar_direcao_bfs(
-                fantasma,
-                pacman_linha,
-                pacman_coluna
+            enum direcao direcao_ideal =
+                buscar_direcao_bfs(
+                    fantasma,
+                    pacman_linha,
+                    pacman_coluna
+                );
+
+
+            int fantasma_linha;
+            int fantasma_coluna;
+
+            posicao_para_grid(
+                fantasma->pos,
+                &fantasma_linha,
+                &fantasma_coluna
             );
+
+
+            int distancia_linha =
+                fantasma_linha - pacman_linha;
+
+            int distancia_coluna =
+                fantasma_coluna - pacman_coluna;
+
+
+            if(distancia_linha < 0)
+            {
+                distancia_linha =
+                    -distancia_linha;
+            }
+
+            if(distancia_coluna < 0)
+            {
+                distancia_coluna =
+                    -distancia_coluna;
+            }
+
+
+            int distancia =
+                distancia_linha +
+                distancia_coluna;
+
+
+            // A miopia aparece somente quando
+            // o Pac-Man esta relativamente perto
+            if(distancia <= 6)
+            {
+                // 15% de chance de tomar
+                // uma decisao diferente da ideal
+                int chance =
+                    GetRandomValue(1, 100);
+
+                if(chance <= 15)
+                {
+                    return erro_fantasma_amarelo(
+                        fantasma,
+                        direcao_ideal
+                    );
+                }
+            }
+
+
+            return direcao_ideal;
+        }
 
 
         case previsor:
-
+        {
             // Temporariamente usa a perseguicao normal
             return buscar_direcao_bfs(
                 fantasma,
                 pacman_linha,
                 pacman_coluna
             );
+        }
 
 
         case emboscador:
-
+        {
             // Temporariamente usa a perseguicao normal
             return buscar_direcao_bfs(
                 fantasma,
                 pacman_linha,
                 pacman_coluna
             );
+        }
 
 
         case imprevisivel:
-
+        {
             // Temporariamente usa a perseguicao normal
             return buscar_direcao_bfs(
                 fantasma,
                 pacman_linha,
                 pacman_coluna
             );
+        }
     }
 
 
