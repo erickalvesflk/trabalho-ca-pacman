@@ -133,6 +133,7 @@ float sprite_atual = 0.0f;
 void desenhar_fantasma(struct entidade ent)
 {
     if(ent.tipo != entidade_fantasma){return;} // Segurança
+    if(congelado){return;}
 
     const int total_sprites = ent.sprites.quant_quadros * 4;
     const int largura_sprite = ent.sprites.textura.width/total_sprites;
@@ -166,14 +167,16 @@ void desenhar_fantasma(struct entidade ent)
         WHITE
     );
 }
+
 void desenhar_pacman(struct entidade ent)
 {
     if(ent.tipo != entidade_pacman){return;} // Segurança
 
-    const int total_sprites = ent.sprites.quant_quadros;
+    const int total_sprites = ent.sprites.quant_quadros * 2;
     const int largura_sprite = ent.sprites.textura.width/total_sprites;
-
-    int pacman_sprite_i = (int)(sprite_atual * ent.sprites.quant_quadros);
+    
+    if(primeiro_frame_congelado){sprite_atual=0.0;}
+    int pacman_sprite_i = (int)(sprite_atual * ent.sprites.quant_quadros) + ent.sprites.quant_quadros*congelado;
 
     int p = (int)(tamanho_bloco*0);
 
@@ -643,7 +646,10 @@ enum grafico_jogo iniciar_grafico()
            !jogador_venceu)
         {
             atualizar_pacman();
-            atualizar_fantasmas();
+            if(!congelado)
+            {
+                atualizar_fantasmas();
+            }
             atualizar_colisao_pacman();
         }
 
