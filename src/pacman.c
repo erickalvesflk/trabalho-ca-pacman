@@ -436,19 +436,19 @@ void atualizar_pacman(void)
     }
 
 
-    if(IsKeyDown(KEY_UP))
+    if(IsKeyDown(KEY_UP) || IsKeyDown(KEY_W))
     {
         direcao_desejada = cima;
     }
-    else if(IsKeyDown(KEY_DOWN))
+    else if(IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S))
     {
         direcao_desejada = baixo;
     }
-    else if(IsKeyDown(KEY_LEFT))
+    else if(IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
     {
         direcao_desejada = esquerda;
     }
-    else if(IsKeyDown(KEY_RIGHT))
+    else if(IsKeyDown(KEY_RIGHT)|| IsKeyDown(KEY_D))
     {
         direcao_desejada = direita;
     }
