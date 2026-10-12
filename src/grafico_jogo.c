@@ -129,40 +129,55 @@ void desenhar_parede(int i, int j, int x, int y)
 }
 
 
-void desenhar_fantasma(struct entidade ent)
+float sprite_atual = 0.0f;
+void desenhar_fantasma(struct entidade ent, struct quadros_entidade quadros_fantasma)
 {
-    if(ent.tipo != entidade_fantasma)
-    {
-        return;
-    }
+    if(ent.tipo != entidade_fantasma){return;} // Segurança
 
-    int tamanho = (int)(tamanho_bloco / 1.5f);
+    const int total_sprites = quadros_fantasma.quant_quadros * 4;
+    int fantasma_sprite_i = (int)(sprite_atual * quadros_fantasma.quant_quadros);
 
-    DrawRectangle(
-        (int)ent.pos.x - tamanho / 2,
-        (int)ent.pos.y - tamanho / 2,
-        tamanho,
-        tamanho,
-        ent.cor
-    );
+    int p = (int)(tamanho_bloco*0.10);
+
+    Rectangle recBase = {
+        0.0f + (fantasma_sprite_i * quadros_fantasma.textura.width/total_sprites),
+        0.0f, 
+        (float)quadros_fantasma.textura.width/total_sprites, 
+        (float)quadros_fantasma.textura.height
+    };
+    Rectangle recGrafico = {
+        ent.pos.x - tamanho_bloco/2 + p,
+        ent.pos.y - tamanho_bloco/2 + p,
+        (float)tamanho_bloco - p,
+        (float)tamanho_bloco - p
+    };
+    Vector2 posPivo = {0,0};
+    
+    DrawTexturePro(quadros_fantasma.textura, recBase, recGrafico, posPivo, 0.0f, WHITE);
 }
-
-
-void desenhar_pacman(struct entidade ent)
+void desenhar_pacman(struct entidade ent, struct quadros_entidade quadros_pacman)
 {
-    if(ent.tipo != entidade_pacman)
-    {
-        return;
-    }
+    if(ent.tipo != entidade_pacman){return;} // Segurança
+    const int total_sprites = quadros_pacman.quant_quadros * 4;
+    int pacman_sprite_i = (int)(sprite_atual * quadros_pacman.quant_quadros);
 
-    int raio = (int)(tamanho_bloco / 2.5f);
+    int p = (int)(tamanho_bloco*0.15);
 
-    DrawCircle(
-        (int)ent.pos.x,
-        (int)ent.pos.y,
-        raio,
-        ent.cor
-    );
+    Rectangle recBase = {
+        0.0f + (pacman_sprite_i * quadros_pacman.textura.width/total_sprites),
+        0.0f, 
+        (float)quadros_pacman.textura.width/total_sprites, 
+        (float)quadros_pacman.textura.height
+    };
+    Rectangle recGrafico = {
+        ent.pos.x - tamanho_bloco/2 + p,
+        ent.pos.y - tamanho_bloco/2 + p,
+        (float)tamanho_bloco - p,
+        (float)tamanho_bloco - p
+    };
+    Vector2 posPivo = {0,0};
+    
+    DrawTexturePro(quadros_pacman.textura, recBase, recGrafico, posPivo, 0.0f, WHITE);
 }
 
 
@@ -293,20 +308,27 @@ void desenhar_mapa()
 }
 
 
-void desenhar_entidades()
+void desenhar_entidades(struct quadros_entidade quadros_pacman, struct quadros_entidade quadros_fantasma)
 {
+    //Desenhando entidades
     for(int i = 0; i < quantidade_entidades; ++i)
     {
-        struct entidade ent =
-            entidades_para_render[i];
+        struct entidade ent = entidades_para_render[i];
+        
+        switch (ent.tipo)
+        {
+        case entidade_fantasma:
+            ent.pos.x = ent.pos.x == 0 ? pos_spawn_fantasmas.x : ent.pos.x;
+            ent.pos.y = ent.pos.y == 0 ? pos_spawn_fantasmas.y : ent.pos.y;
+        
+            desenhar_fantasma(ent, quadros_fantasma);
+            break;
+        case entidade_pacman:
+            ent.pos.x = ent.pos.x == 0 ? pos_spawn_jogador.x : ent.pos.x;
+            ent.pos.y = ent.pos.y == 0 ? pos_spawn_jogador.y : ent.pos.y;
 
-        if(ent.tipo == entidade_fantasma)
-        {
-            desenhar_fantasma(ent);
-        }
-        else if(ent.tipo == entidade_pacman)
-        {
-            desenhar_pacman(ent);
+            desenhar_pacman(ent, quadros_pacman);
+            break;
         }
     }
 }
@@ -527,26 +549,36 @@ enum grafico_jogo iniciar_grafico()
         altura_tela,
         "PacMan - Trabalho Construcao de Algoritmos"
     );
-
     SetTargetFPS(FPS);
+
+    struct quadros_entidade quadros_pacman = {
+        LoadTexture("src/sprite_pacman.png"),
+        4
+    };
+    struct quadros_entidade quadros_fantasmas = {
+        LoadTexture("src/sprite_fantasma.png"),
+        2
+    };
 
     while(!WindowShouldClose())
     {
         // Animacao dos pontos
-        multi_alpha +=
-            (1.0f / FPS) * sentido_alpha;
+        multi_alpha += GetFrameTime() * sentido_alpha;
 
         if(multi_alpha < 0.375f)
         {
-            multi_alpha = 0.375f;
-            sentido_alpha = 1;
+            multi_alpha = 0.375f; 
+            sentido_alpha=1;
         }
-
         if(multi_alpha > 1.0f)
         {
-            multi_alpha = 1.0f;
-            sentido_alpha = -1;
+            multi_alpha = 1.0f; 
+            sentido_alpha=-1;
         }
+
+        // Sprite
+        sprite_atual += GetFrameTime();
+        if(sprite_atual > 1){sprite_atual = 0;}
 
         if(!mapa_escolhido)
         {
@@ -596,7 +628,7 @@ enum grafico_jogo iniciar_grafico()
 
         desenhar_mapa();
         desenhar_display();
-        desenhar_entidades();
+        desenhar_entidades(quadros_pacman, quadros_fantasmas);
 
         if(game_over)
         {
