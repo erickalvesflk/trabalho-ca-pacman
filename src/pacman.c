@@ -7,20 +7,21 @@ enum direcao direcao_desejada = direita;
 
 
 // Pac-Man comeca com tres vidas
-int vidas_pacman = 3;
-
-
+int vidas_pacman = VIDAS;
 // Indica se o jogador perdeu todas as vidas
 int game_over = 0;
-
-
 // Indica se todos os pontos foram coletados
 int jogador_venceu = 0;
-
-
 // Tempo de protecao depois de perder uma vida
 float tempo_protecao_pacman = 0.0f;
 
+void inicializar_pacman()
+{
+    vidas_pacman = VIDAS;
+    game_over = 0;
+    jogador_venceu = 0;
+    tempo_protecao_pacman = 0.0f;
+}
 
 // Posicoes de spawn definidas no grafico
 extern Vector2 pos_spawn_fantasmas;
@@ -434,7 +435,6 @@ void atualizar_pacman(void)
     {
         return;
     }
-
 
     if(IsKeyDown(KEY_UP) || IsKeyDown(KEY_W))
     {

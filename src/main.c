@@ -6,6 +6,12 @@
 
 int main()
 {
+    InitWindow(
+        largura_tela,
+        altura_tela,
+        "PacMan - Trabalho Construcao de Algoritmos"
+    );
+    SetTargetFPS(FPS);
     enum grafico_jogo motivo_retorno;
     do
     {
@@ -16,8 +22,8 @@ int main()
         fechar_data_mapas();
 
         motivo_retorno = iniciar_grafico();
-
     } while (!(motivo_retorno == retorno_sair || motivo_retorno == retorno_falha_mapa));
-    
+
+    CloseWindow();
     return 0;
 }

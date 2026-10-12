@@ -1,7 +1,6 @@
 #include "grafico_jogo.h"
 #include "fantasmas.h"
 #include "pacman.h"
-#include "stdio.h"
 
 // Cores do jogo
 const Color mapaFundo = {0, 0, 0, 255};
@@ -498,11 +497,9 @@ void desenhar_game_over()
     int largura_caixa = 300;
     int altura_caixa = 100;
 
-    int x =
-        (largura_tela - largura_caixa) / 2;
+    int x = (largura_tela - largura_caixa) / 2;
 
-    int y =
-        (altura_tela - altura_caixa) / 2;
+    int y = (altura_tela - altura_caixa) / 2;
 
     DrawRectangle(
         x,
@@ -523,8 +520,7 @@ void desenhar_game_over()
     const char *texto = "GAME OVER";
     int tamanho_fonte = 35;
 
-    int largura_texto =
-        MeasureText(texto, tamanho_fonte);
+    int largura_texto = MeasureText(texto, tamanho_fonte);
 
     DrawText(
         texto,
@@ -532,6 +528,17 @@ void desenhar_game_over()
         y + 30,
         tamanho_fonte,
         RED
+    );
+
+    const char *legenda = "Aperte ENTER para recomeçar!";
+    int largura_legenda = MeasureText(legenda, tamanho_fonte/2);
+
+    DrawText(
+        legenda,
+        x + (largura_caixa - largura_legenda) / 2,
+        y + 32+tamanho_fonte+4,
+        tamanho_fonte/2,
+        WHITE
     );
 }
 
@@ -541,11 +548,9 @@ void desenhar_vitoria()
     int largura_caixa = 300;
     int altura_caixa = 100;
 
-    int x =
-        (largura_tela - largura_caixa) / 2;
+    int x = (largura_tela - largura_caixa) / 2;
 
-    int y =
-        (altura_tela - altura_caixa) / 2;
+    int y = (altura_tela - altura_caixa) / 2;
 
     DrawRectangle(
         x,
@@ -568,7 +573,7 @@ void desenhar_vitoria()
 
     int largura_texto =
         MeasureText(texto, tamanho_fonte);
-
+        
     DrawText(
         texto,
         x + (largura_caixa - largura_texto) / 2,
@@ -576,11 +581,23 @@ void desenhar_vitoria()
         tamanho_fonte,
         YELLOW
     );
+
+    const char *legenda = "Aperte ENTER para recomeçar!";
+    int largura_legenda = MeasureText(legenda, tamanho_fonte/2);
+
+    DrawText(
+        legenda,
+        x + (largura_caixa - largura_legenda) / 2,
+        y + 32+tamanho_fonte+4,
+        tamanho_fonte/2,
+        WHITE
+    );
 }
 
 
 enum grafico_jogo iniciar_grafico()
 {
+    inicializar_pacman();
     pos_spawn_fantasmas = (Vector2){0, 0};
     pos_spawn_jogador = (Vector2){0, 0};
 
@@ -590,12 +607,6 @@ enum grafico_jogo iniciar_grafico()
     multi_alpha = 1.0f;
     sentido_alpha = -1;
 
-    InitWindow(
-        largura_tela,
-        altura_tela,
-        "PacMan - Trabalho Construcao de Algoritmos"
-    );
-    SetTargetFPS(FPS);
     gerar_entidades();
 
     while(!WindowShouldClose())
@@ -671,18 +682,24 @@ enum grafico_jogo iniciar_grafico()
         if(game_over)
         {
             desenhar_game_over();
+            if(IsKeyPressed(KEY_ENTER) && game_over)
+            {   
+                return retorno_derrota;
+            }
         }
-
+        
         if(jogador_venceu)
         {
             desenhar_vitoria();
+            if(IsKeyPressed(KEY_ENTER) && jogador_venceu)
+            {
+                return retorno_vitoria;
+            }
         }
 
         EndDrawing();
     }
 
     descarregar_entidades();
-    CloseWindow();
-
     return retorno_sair;
 }

@@ -2,7 +2,7 @@
 #define PACMAN_H
 
 #include "entidades.h"
-
+#define VIDAS 3
 // Quantidade atual de vidas do jogador
 extern int vidas_pacman;
 
@@ -14,5 +14,6 @@ extern int jogador_venceu;
 
 void atualizar_pacman(void);
 void atualizar_colisao_pacman(void);
+void inicializar_pacman(void);
 
 #endif
