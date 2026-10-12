@@ -7,20 +7,21 @@ enum direcao direcao_desejada = direita;
 
 
 // Pac-Man comeca com tres vidas
-int vidas_pacman = 3;
-
-
+int vidas_pacman = VIDAS;
 // Indica se o jogador perdeu todas as vidas
 int game_over = 0;
-
-
 // Indica se todos os pontos foram coletados
 int jogador_venceu = 0;
-
-
 // Tempo de protecao depois de perder uma vida
 float tempo_protecao_pacman = 0.0f;
 
+void inicializar_pacman()
+{
+    vidas_pacman = VIDAS;
+    game_over = 0;
+    jogador_venceu = 0;
+    tempo_protecao_pacman = 0.0f;
+}
 
 // Posicoes de spawn definidas no grafico
 extern Vector2 pos_spawn_fantasmas;
@@ -41,7 +42,22 @@ int linha_tem_tunel(int linha)
     {
         return 0;
     }
+    return 1;
+}
+int coluna_tem_tunel(int coluna)
+{
+    if(coluna < 0 || coluna >= tamanho_grid)
+    {
+        return 0;
+    }
 
+    // So existe tunel se as duas extremidades
+    // da coluna nao forem paredes
+    if(mapa_info.mapa[0][coluna].tipo == bloco_parede ||
+       mapa_info.mapa[tamanho_grid - 1][coluna].tipo == bloco_parede)
+    {
+        return 0;
+    }
     return 1;
 }
 
@@ -56,6 +72,10 @@ int posicao_livre_pacman(float x, float y)
 
     if(linha < 0 || linha >= tamanho_grid)
     {
+        if(coluna_tem_tunel(coluna))
+        {
+            return 1;
+        }
         return 0;
     }
 
@@ -67,9 +87,9 @@ int posicao_livre_pacman(float x, float y)
         {
             return 1;
         }
-
         return 0;
     }
+
 
     if(mapa_info.mapa[linha][coluna].tipo == bloco_parede)
     {
@@ -145,10 +165,10 @@ void verificar_tunel_pacman(struct entidade *pacman)
     int x_mapa = (largura_tela - tamanho_mapa) - distancia_mapa;
     int y_mapa = (altura_tela - tamanho_mapa) / 2;
 
-    int linha =
-        (int)((pacman->pos.y - y_mapa) / tamanho_bloco);
+    int linha = (int)((pacman->pos.y - y_mapa) / tamanho_bloco);
+    int coluna = (int)((pacman->pos.x - x_mapa) / tamanho_bloco);
 
-    if(!linha_tem_tunel(linha))
+    if(!linha_tem_tunel(linha) && !coluna_tem_tunel(coluna))
     {
         return;
     }
@@ -163,6 +183,18 @@ void verificar_tunel_pacman(struct entidade *pacman)
     else if(pacman->pos.x > limite_direito)
     {
         pacman->pos.x = limite_esquerdo + 1;
+    }
+    
+    float limite_topo = y_mapa;
+    float limite_base = y_mapa + tamanho_mapa;
+
+    if(pacman->pos.y < limite_topo)
+    {
+        pacman->pos.y = limite_base - 1;
+    }
+    else if(pacman->pos.y > limite_base)
+    {
+        pacman->pos.y = limite_topo + 1;
     }
 }
 
@@ -435,20 +467,19 @@ void atualizar_pacman(void)
         return;
     }
 
-
-    if(IsKeyDown(KEY_UP))
+    if(IsKeyDown(KEY_UP) || IsKeyDown(KEY_W))
     {
         direcao_desejada = cima;
     }
-    else if(IsKeyDown(KEY_DOWN))
+    else if(IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S))
     {
         direcao_desejada = baixo;
     }
-    else if(IsKeyDown(KEY_LEFT))
+    else if(IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
     {
         direcao_desejada = esquerda;
     }
-    else if(IsKeyDown(KEY_RIGHT))
+    else if(IsKeyDown(KEY_RIGHT)|| IsKeyDown(KEY_D))
     {
         direcao_desejada = direita;
     }

@@ -5,7 +5,7 @@
 // Cores do jogo
 const Color mapaFundo = {0, 0, 0, 255};
 const Color corFundo1 = {3, 15, 79, 255};
-const Color corFundo2 = {2, 24, 184, 255};
+const Color corFundo2 = {2, 10, 55, 255};
 const Color corBordas = {6, 35, 212, 255};
 const Color corDisplay = {12, 40, 250, 255};
 
@@ -129,39 +129,99 @@ void desenhar_parede(int i, int j, int x, int y)
 }
 
 
+float sprite_atual = 0.0f;
 void desenhar_fantasma(struct entidade ent)
 {
-    if(ent.tipo != entidade_fantasma)
-    {
-        return;
-    }
+    if(ent.tipo != entidade_fantasma){return;} // Segurança
 
-    int tamanho = (int)(tamanho_bloco / 1.5f);
+    const int total_sprites = ent.sprites.quant_quadros * 4;
+    const int largura_sprite = ent.sprites.textura.width/total_sprites;
 
-    DrawRectangle(
-        (int)ent.pos.x - tamanho / 2,
-        (int)ent.pos.y - tamanho / 2,
-        tamanho,
-        tamanho,
-        ent.cor
+    int fantasma_sprite_i = (int)(sprite_atual * ent.sprites.quant_quadros);
+
+    int p = (int)(tamanho_bloco*0);
+
+    Rectangle recBase = {
+        0.0f + (fantasma_sprite_i * largura_sprite) + (largura_sprite)*ent.sprites.quant_quadros*ent.direcao_atual,
+        0.0f, 
+        (float)ent.sprites.textura.width/total_sprites, 
+        (float)ent.sprites.textura.height
+    };
+
+    Rectangle recGrafico = {
+        ent.pos.x - tamanho_bloco/2 + p,
+        ent.pos.y - tamanho_bloco/2 + p,
+        (float)tamanho_bloco - p,
+        (float)tamanho_bloco - p
+    };
+
+    Vector2 posPivo = {0,0};
+    
+    DrawTexturePro(
+        ent.sprites.textura,
+        recBase,
+        recGrafico, 
+        posPivo, 
+        0.0f, 
+        WHITE
     );
 }
-
-
 void desenhar_pacman(struct entidade ent)
 {
-    if(ent.tipo != entidade_pacman)
+    if(ent.tipo != entidade_pacman){return;} // Segurança
+
+    const int total_sprites = ent.sprites.quant_quadros;
+    const int largura_sprite = ent.sprites.textura.width/total_sprites;
+
+    int pacman_sprite_i = (int)(sprite_atual * ent.sprites.quant_quadros);
+
+    int p = (int)(tamanho_bloco*0);
+
+    Rectangle recBase = {
+        0.0f + (pacman_sprite_i * largura_sprite),
+        0.0f, 
+        (float)ent.sprites.textura.width/total_sprites, 
+        (float)ent.sprites.textura.height
+    };
+
+    Rectangle recGrafico = {
+        ent.pos.x - tamanho_bloco/2 + p,
+        ent.pos.y - tamanho_bloco/2 + p,
+        (float)tamanho_bloco - p,
+        (float)tamanho_bloco - p
+    };
+
+    Vector2 posPivo = {0,0};
+    float a = 0.0f;
+
+    switch (ent.direcao_atual)
     {
-        return;
+    case esquerda:
+        posPivo.x = tamanho_bloco;
+        posPivo.y = tamanho_bloco;
+        a = 180.0f;
+        break;
+
+    case baixo:
+        posPivo.y = tamanho_bloco;
+        a = 90.0f;
+        break;
+    case cima:  
+        posPivo.x = tamanho_bloco;
+        a = -90.0f;
+        break;
+    case direita:
+        break;
     }
 
-    int raio = (int)(tamanho_bloco / 2.5f);
 
-    DrawCircle(
-        (int)ent.pos.x,
-        (int)ent.pos.y,
-        raio,
-        ent.cor
+    DrawTexturePro(
+        ent.sprites.textura, 
+        recBase, 
+        recGrafico, 
+        posPivo, 
+        a, 
+        WHITE
     );
 }
 
@@ -295,18 +355,25 @@ void desenhar_mapa()
 
 void desenhar_entidades()
 {
+    //Desenhando entidades
     for(int i = 0; i < quantidade_entidades; ++i)
     {
-        struct entidade ent =
-            entidades_para_render[i];
-
-        if(ent.tipo == entidade_fantasma)
+        struct entidade ent = entidades_para_render[i];
+        
+        switch (ent.tipo)
         {
+        case entidade_fantasma:
+            ent.pos.x = ent.pos.x == 0 ? pos_spawn_fantasmas.x : ent.pos.x;
+            ent.pos.y = ent.pos.y == 0 ? pos_spawn_fantasmas.y : ent.pos.y;
+        
             desenhar_fantasma(ent);
-        }
-        else if(ent.tipo == entidade_pacman)
-        {
+            break;
+        case entidade_pacman:
+            ent.pos.x = ent.pos.x == 0 ? pos_spawn_jogador.x : ent.pos.x;
+            ent.pos.y = ent.pos.y == 0 ? pos_spawn_jogador.y : ent.pos.y;
+
             desenhar_pacman(ent);
+            break;
         }
     }
 }
@@ -430,11 +497,9 @@ void desenhar_game_over()
     int largura_caixa = 300;
     int altura_caixa = 100;
 
-    int x =
-        (largura_tela - largura_caixa) / 2;
+    int x = (largura_tela - largura_caixa) / 2;
 
-    int y =
-        (altura_tela - altura_caixa) / 2;
+    int y = (altura_tela - altura_caixa) / 2;
 
     DrawRectangle(
         x,
@@ -455,8 +520,7 @@ void desenhar_game_over()
     const char *texto = "GAME OVER";
     int tamanho_fonte = 35;
 
-    int largura_texto =
-        MeasureText(texto, tamanho_fonte);
+    int largura_texto = MeasureText(texto, tamanho_fonte);
 
     DrawText(
         texto,
@@ -464,6 +528,18 @@ void desenhar_game_over()
         y + 30,
         tamanho_fonte,
         RED
+    );
+
+    const char *legenda = "Aperte ENTER para recomeçar!";
+    int largura_legenda = MeasureText(legenda, tamanho_fonte/2);
+    Color cor_legenda = {255,255,255,255*multi_alpha};
+
+    DrawText(
+        legenda,
+        x + (largura_caixa - largura_legenda) / 2,
+        y + 32+tamanho_fonte+4,
+        tamanho_fonte/2,
+        cor_legenda
     );
 }
 
@@ -473,11 +549,9 @@ void desenhar_vitoria()
     int largura_caixa = 300;
     int altura_caixa = 100;
 
-    int x =
-        (largura_tela - largura_caixa) / 2;
+    int x = (largura_tela - largura_caixa) / 2;
 
-    int y =
-        (altura_tela - altura_caixa) / 2;
+    int y = (altura_tela - altura_caixa) / 2;
 
     DrawRectangle(
         x,
@@ -500,7 +574,7 @@ void desenhar_vitoria()
 
     int largura_texto =
         MeasureText(texto, tamanho_fonte);
-
+        
     DrawText(
         texto,
         x + (largura_caixa - largura_texto) / 2,
@@ -508,11 +582,23 @@ void desenhar_vitoria()
         tamanho_fonte,
         YELLOW
     );
+
+    const char *legenda = "Aperte ENTER para recomeçar!";
+    int largura_legenda = MeasureText(legenda, tamanho_fonte/2);
+    Color cor_legenda = {255,255,255,255*multi_alpha};
+    DrawText(
+        legenda,
+        x + (largura_caixa - largura_legenda) / 2,
+        y + 32+tamanho_fonte+4,
+        tamanho_fonte/2,
+        cor_legenda
+    );
 }
 
 
 enum grafico_jogo iniciar_grafico()
 {
+    inicializar_pacman();
     pos_spawn_fantasmas = (Vector2){0, 0};
     pos_spawn_jogador = (Vector2){0, 0};
 
@@ -522,31 +608,27 @@ enum grafico_jogo iniciar_grafico()
     multi_alpha = 1.0f;
     sentido_alpha = -1;
 
-    InitWindow(
-        largura_tela,
-        altura_tela,
-        "PacMan - Trabalho Construcao de Algoritmos"
-    );
-
-    SetTargetFPS(FPS);
+    gerar_entidades();
 
     while(!WindowShouldClose())
     {
         // Animacao dos pontos
-        multi_alpha +=
-            (1.0f / FPS) * sentido_alpha;
+        multi_alpha += GetFrameTime() * sentido_alpha;
 
         if(multi_alpha < 0.375f)
         {
-            multi_alpha = 0.375f;
-            sentido_alpha = 1;
+            multi_alpha = 0.375f; 
+            sentido_alpha=1;
         }
-
         if(multi_alpha > 1.0f)
         {
-            multi_alpha = 1.0f;
-            sentido_alpha = -1;
+            multi_alpha = 1.0f; 
+            sentido_alpha=-1;
         }
+
+        // Sprite
+        sprite_atual += GetFrameTime();
+        if(sprite_atual > 1){sprite_atual = 0;}
 
         if(!mapa_escolhido)
         {
@@ -581,7 +663,7 @@ enum grafico_jogo iniciar_grafico()
         DrawText(
             "Pacman",
             20,
-            20,
+            10,
             40,
             WHITE
         );
@@ -601,17 +683,24 @@ enum grafico_jogo iniciar_grafico()
         if(game_over)
         {
             desenhar_game_over();
+            if(IsKeyPressed(KEY_ENTER) && game_over)
+            {   
+                return retorno_derrota;
+            }
         }
-
+        
         if(jogador_venceu)
         {
             desenhar_vitoria();
+            if(IsKeyPressed(KEY_ENTER) && jogador_venceu)
+            {
+                return retorno_vitoria;
+            }
         }
 
         EndDrawing();
     }
 
-    CloseWindow();
-
+    descarregar_entidades();
     return retorno_sair;
 }
