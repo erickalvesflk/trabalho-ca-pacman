@@ -29,7 +29,7 @@ struct quadros_entidade
 struct entidade
 {
     enum tipo_entidade tipo;
-    
+
     struct quadros_entidade sprites;
     Color cor;
 
@@ -41,5 +41,5 @@ struct entidade
 extern struct entidade entidades_para_render[quantidade_entidades];
 
 void gerar_entidades(void);
-
+void descarregar_entidades(void);
 #endif

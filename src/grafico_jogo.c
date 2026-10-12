@@ -136,12 +136,14 @@ void desenhar_fantasma(struct entidade ent)
     if(ent.tipo != entidade_fantasma){return;} // Segurança
 
     const int total_sprites = ent.sprites.quant_quadros * 4;
+    const int largura_sprite = ent.sprites.textura.width/total_sprites;
+
     int fantasma_sprite_i = (int)(sprite_atual * ent.sprites.quant_quadros);
 
     int p = (int)(tamanho_bloco*0);
 
     Rectangle recBase = {
-        0.0f + (fantasma_sprite_i * ent.sprites.textura.width/total_sprites),
+        0.0f + (fantasma_sprite_i * largura_sprite) + (largura_sprite)*ent.sprites.quant_quadros*ent.direcao_atual,
         0.0f, 
         (float)ent.sprites.textura.width/total_sprites, 
         (float)ent.sprites.textura.height
@@ -679,6 +681,7 @@ enum grafico_jogo iniciar_grafico()
         EndDrawing();
     }
 
+    descarregar_entidades();
     CloseWindow();
 
     return retorno_sair;

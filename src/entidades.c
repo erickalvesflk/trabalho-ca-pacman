@@ -64,3 +64,11 @@ void gerar_entidades()
     // Fantasma roxo
     entidades_para_render[5] = gerar_fantasma(PURPLE, esquerda, 1.5f);
 }
+
+void descarregar_entidades(void)
+{
+    for(int i = 0; i < quantidade_entidades; i++)
+    {
+        UnloadTexture(entidades_para_render[i].sprites.textura);
+    }
+}
