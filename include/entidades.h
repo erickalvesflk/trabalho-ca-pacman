@@ -7,10 +7,10 @@
 
 enum direcao
 {
-    cima,
+    direita,
     baixo,
     esquerda,
-    direita
+    cima
 };
 
 enum tipo_entidade

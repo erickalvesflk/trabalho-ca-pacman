@@ -137,7 +137,7 @@ void desenhar_fantasma(struct entidade ent, struct quadros_entidade quadros_fant
     const int total_sprites = quadros_fantasma.quant_quadros * 4;
     int fantasma_sprite_i = (int)(sprite_atual * quadros_fantasma.quant_quadros);
 
-    int p = (int)(tamanho_bloco*0.10);
+    int p = (int)(tamanho_bloco*0);
 
     Rectangle recBase = {
         0.0f + (fantasma_sprite_i * quadros_fantasma.textura.width/total_sprites),
@@ -159,16 +159,18 @@ void desenhar_pacman(struct entidade ent, struct quadros_entidade quadros_pacman
 {
     if(ent.tipo != entidade_pacman){return;} // Segurança
     const int total_sprites = quadros_pacman.quant_quadros * 4;
+    const int largura_sprite = quadros_pacman.textura.width/total_sprites;
     int pacman_sprite_i = (int)(sprite_atual * quadros_pacman.quant_quadros);
 
     int p = (int)(tamanho_bloco*0.15);
 
     Rectangle recBase = {
-        0.0f + (pacman_sprite_i * quadros_pacman.textura.width/total_sprites),
+        0.0f + (pacman_sprite_i * largura_sprite) + largura_sprite*quadros_pacman.quant_quadros*ent.direcao_atual,
         0.0f, 
         (float)quadros_pacman.textura.width/total_sprites, 
         (float)quadros_pacman.textura.height
     };
+
     Rectangle recGrafico = {
         ent.pos.x - tamanho_bloco/2 + p,
         ent.pos.y - tamanho_bloco/2 + p,
