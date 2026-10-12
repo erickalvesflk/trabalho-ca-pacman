@@ -202,9 +202,12 @@ void coletar_ponto_pacman(struct entidade *pacman)
         }
 
 
-        // TESTE TEMPORARIO:
-        // A primeira bolinha coletada ativa a vitoria
-        jogador_venceu = 1;
+        // Vitoria somente quando todos
+        // os pontos forem coletados
+        if(mapa_info.total_pontos == 0)
+        {
+            jogador_venceu = 1;
+        }
     }
 }
 
