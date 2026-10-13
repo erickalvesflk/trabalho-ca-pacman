@@ -1,0 +1,43 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Compilar Projeto C - Windows",
+            "command": "C:\\msys64\\ucrt64\\bin\\gcc.exe", // Insira o endereço do seu compilador C
+            "args": [
+                "-g",
+
+                "-I${workspaceFolder}/include",
+                "-I${workspaceFolder}/local_raylib",
+
+                "${workspaceFolder}/src/main.c",
+                "${workspaceFolder}/src/grafico_jogo.c",
+                "${workspaceFolder}/src/geranciador_de_mapa.c",
+                "${workspaceFolder}/src/entidades.c",
+                "${workspaceFolder}/src/fantasmas.c",
+                "${workspaceFolder}/src/pacman.c",
+
+                "-L${workspaceFolder}/local_raylib",
+                "-lraylib",
+
+                "-lopengl32",
+                "-lgdi32",
+                "-lwinmm",
+                "${workspaceFolder}/src/resource.o", // Apenas para windows!
+                "-o",
+                "${workspaceFolder}/build/pacman.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
