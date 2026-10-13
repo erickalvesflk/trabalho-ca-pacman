@@ -2,7 +2,7 @@
 TRABALHO PACMAN - Contrução de algoritimos UERJ 2026.1
 ------------------------------------------------------
     Trabalho onde Recriamos o jogo clássico PACMAN utilizando apenas a linguagem C
-    e a bibliteca de criação de jogos RAYLIB. Em geral, Kauã Soares foi responável
+    e a biblioteca de criação de jogos RAYLIB. Em geral, Kauã Soares foi responável
     pelo núcleo do jogo (Sistemas dos fantasmas, pacman e pontos) e Erick Alves foi
     responsável pela parte gráfica (Criação e Gerenciamento de Mapas, Sprites e Gráfico)
 
