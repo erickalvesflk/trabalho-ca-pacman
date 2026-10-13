@@ -4,6 +4,8 @@ Gerenciador de Mapa
 Módulo responsavel pelo gerenciamento do mapa, gerindo o arquivo mapas.txt, salvando pontos de interesse,
 escolha do mapa, etc...
 */
+#ifndef GERANCIADOR_DE_MAPA_H
+#define GERANCIADOR_DE_MAPA_H
 
 #define caminho "mapas.txt"
 #define tamanho_grid 25
@@ -38,3 +40,5 @@ int iniciar_data_mapas(void); // Inicia a análise no arquivo `mapa.txt`. No qua
 int escolher_mapa(void); // Escolhe um dos mapas carregados em `mapa.txt`
 int quantidade_de_mapas(void); // Informa a quantidade de mapas existentes em `mapa.txt`
 int fechar_data_mapas(void); // Fecha corretamente o arquivo `mapa.txt`
+
+#endif 
