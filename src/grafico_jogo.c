@@ -434,7 +434,19 @@ void desenhar_display()
         WHITE
     );
 
-    reajuste_y += 30;
+    reajuste_y += 15;
+    DrawText(
+        TextFormat(
+            "%d",
+            total_pontos_inicial - mapa_info.total_pontos
+        ),
+        display_x + reajuste_x + MeasureText("Pontos restantes: xxx",15),
+        display_y + reajuste_y,
+        8,
+        WHITE
+    );
+
+    reajuste_y += 15;
 
     DrawText(
         TextFormat(
