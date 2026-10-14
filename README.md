@@ -4,8 +4,9 @@
   pelo núcleo do jogo (Sistemas dos fantasmas, pacman e pontos) e Erick Alves foi
   responsável pela parte gráfica (Criação e Gerenciamento de Mapas, Sprites e Gráfico)
 
-  Professor: Eugênio Silva
-  Participantes:
+**Professor:** Eugênio Silva
+  
+**Participantes**:
   - Erick Alves dos Santos
   - Kauã Soares dos Santos Rodrigues
 
